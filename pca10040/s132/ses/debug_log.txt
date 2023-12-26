@@ -1,0 +1,66 @@
+<info> app_timer: RTC: initialized.
+<info> app: LED ON.
+<info> app: Template example started info.
+<info> app: Fast advertising.
+<info> app: BLE event received. Event type = 16
+
+<info> app: Connected.
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 33
+
+<info> app: BLE event received. Event type = 34
+
+<info> app: BLE event received. Event type = 35
+
+<info> app: BLE event received. Event type = 36
+
+<info> app: BLE event received. Event type = 85
+
+<info> app: BLE event received. Event type = 80
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 80
+
+<info> app: info m_custom_value=1
+<info> app: In ble_cus_custom_value_update. 
+
+<info> app: sd_ble_gatts_hvx result: 0. 
+
+<info> app: BLE event received. Event type = 87
+
+<info> app: info m_custom_value=2
+<info> app: In ble_cus_custom_value_update. 
+
+<info> app: sd_ble_gatts_hvx result: 0. 
+
+<info> app: BLE event received. Event type = 87
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: info m_custom_value=3
+<info> app: In ble_cus_custom_value_update. 
+
+<info> app: sd_ble_gatts_hvx result: 0. 
+
+<info> app: BLE event received. Event type = 87
+
+<info> app: BLE event received. Event type = 80
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+
+<info> app: BLE event received. Event type = 18
+

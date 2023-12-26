@@ -1,0 +1,98 @@
+<!DOCTYPE CrossStudio_Session_File>
+<session>
+ <Bookmarks/>
+ <Breakpoints groups="Breakpoints" active_group="Breakpoints">
+  <BreakpointListItem trigger="" line="64" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="3" filename="../../../../../../components/libraries/util/app_error_weak.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="66" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="3" filename="../../../../../../components/boards/boards.c" useHWbreakpoint="false"/>
+  <BreakpointListItem trigger="" line="72" counter="0" hardwareBreakpoint="" isFunctionBreakpoint="false" action="" expression="" group="Breakpoints" type="Breakpoint" state="3" filename="../../../../../../components/boards/boards.c" useHWbreakpoint="false"/>
+  <Exceptions set="MemManage;UsageFault_Coprocessor;UsageFault_CheckingError;UsageFault_StateError;BusFault;ExceptionEntryReturnFault;HardFault"/>
+ </Breakpoints>
+ <ExecutionProfileWindow/>
+ <FrameBufferWindow>
+  <FrameBufferWindow bufferHeight="-1" addressSpace="" addressText="" bufferWidth="-1"/>
+ </FrameBufferWindow>
+ <Memory1>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_template_pca10040_s132_Debug" sizeText="" addressText="0xAC4"/>
+ </Memory1>
+ <Memory2>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_template_pca10040_s132_Debug" sizeText="" addressText=""/>
+ </Memory2>
+ <Memory3>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_template_pca10040_s132_Debug" sizeText="" addressText=""/>
+ </Memory3>
+ <Memory4>
+  <MemoryWindow addressSpace="" dataSize="1" autoEvaluate="0" viewMode="0" viewType="4" addressOrder="0" columnsText="" refreshPeriod="0" name="ble_app_template_pca10040_s132_Debug" sizeText="" addressText=""/>
+ </Memory4>
+ <Project>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;Application"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;Board Definition"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;nRF_BLE"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;nRF_Libraries"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;nRF_Log"/>
+  <ProjectSessionItem path="ble_app_template_pca10040_s132;ble_app_template_pca10040_s132;nRF_SoftDevice"/>
+ </Project>
+ <Register1>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_template_pca10040_s132_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register1>
+ <Register2>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_template_pca10040_s132_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register2>
+ <Register3>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_template_pca10040_s132_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register3>
+ <Register4>
+  <RegisterWindow visibleNodes="CPU - Current Context/r0;CPU - Current Context/r1;CPU - Current Context/r2;CPU - Current Context/r3;CPU - Current Context/r4;CPU - Current Context/r5;CPU - Current Context/r6;CPU - Current Context/r7;CPU - Current Context/r8;CPU - Current Context/r9;CPU - Current Context/r10;CPU - Current Context/r11;CPU - Current Context/r12;CPU - Current Context/sp(r13);CPU - Current Context/lr(r14);CPU - Current Context/pc(r15);CPU - Current Context/apsr;CPU/r0;CPU/r1;CPU/r2;CPU/r3;CPU/r4;CPU/r5;CPU/r6;CPU/r7;CPU/r8;CPU/r9;CPU/r10;CPU/r11;CPU/r12;CPU/sp(r13);CPU/lr(r14);CPU/pc(r15);CPU/xpsr;CPU/MSP;CPU/PSP;CPU/PRIMASK;CPU/BASEPRI;CPU/FAULTMASK;CPU/CONTROL;CPU/internal" binaryNodes="" asciiNodes="" openNodes="CPU - Current Context" name="ble_app_template_pca10040_s132_Debug" decimalNodes="" octalNodes="" unsignedNodes=""/>
+ </Register4>
+ <Threads>
+  <ThreadsWindow showLists=""/>
+ </Threads>
+ <TraceWindow>
+  <Trace enabled="Yes"/>
+ </TraceWindow>
+ <Watch1>
+  <Watches active="1" update="Never"/>
+ </Watch1>
+ <Watch2>
+  <Watches active="0" update="Never"/>
+ </Watch2>
+ <Watch3>
+  <Watches active="0" update="Never"/>
+ </Watch3>
+ <Watch4>
+  <Watches active="0" update="Never"/>
+ </Watch4>
+ <Files>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="860" useTextEdit="1" path="../../../main.c" left="0" top="850" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="36" y="102" useTextEdit="1" path="../../../../../../external/segger_rtt/SEGGER_RTT_Syscalls_SES.c" left="0" top="94" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="65" y="36" useTextEdit="1" path="flash_placement.xml" left="0" top="7" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="51" y="7580" useTextEdit="1" path="../config/sdk_config.h" left="0" top="7571" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="205" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/boards/boards.h" left="0" top="187" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="550" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/ble/ble_advertising/ble_advertising.c" left="0" top="550" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="25" y="72" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/boards/pca10040.h" left="0" top="46" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="21" y="113" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/libraries/log/nrf_log.h" left="0" top="100" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="101" useTextEdit="1" path="../../../../../../components/libraries/util/app_error_weak.c" left="0" selected="1" top="79" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="48" useTextEdit="1" path="../../../../../../components/libraries/util/app_error_handler_gcc.c" left="0" top="31" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="73" y="71" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../ble_cus.c" left="0" top="68" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="32" y="433" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/components/softdevice/common/nrf_sdh_ble.c" path="../../../../../../components/softdevice/s132/headers/ble.h" left="0" top="417" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="0" useTextEdit="1" path="../../../../../../modules/nrfx/mdk/nrf.h" left="0" top="0" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="46" y="65" useTextEdit="1" path="../../../../../../components/softdevice/s132/headers/nrf_error.h" left="0" top="45" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="225" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/softdevice/common/nrf_sdh_ble.c" left="0" top="216" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="71" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/boards/boards.c" left="0" top="47" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="37" y="232" useTextEdit="1" path="../../../../../../components/libraries/bsp/bsp.c" left="0" top="228" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="324" useTextEdit="1" path="../../../../../../components/libraries/timer/app_timer2.c" left="0" top="308" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="266" useTextEdit="1" path="../../../../../../components/ble/common/ble_advdata.h" left="0" top="265" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="68" y="385" useTextEdit="1" path="../../../../../../components/ble/nrf_ble_scan/nrf_ble_scan.c" left="0" top="371" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="67" y="709" useTextEdit="1" path="../../../../../../components/ble/common/ble_advdata.c" left="0" top="695" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="18" y="65" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/ble_cus.c" path="../../../ble_cus.h" left="0" top="53" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="5" y="122" useTextEdit="1" path="../../../../../../components/libraries/timer/app_timer_rtx.c" left="0" top="111" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="54" y="67" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/main.c" path="../../../../../../components/libraries/log/nrf_log_default_backends.h" left="0" top="37" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="73" y="52" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/components/libraries/log/nrf_log_default_backends.h" path="../../../../../../components/libraries/log/src/nrf_log_default_backends.c" left="0" top="32" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="4" y="53" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/components/libraries/log/src/nrf_log_default_backends.c" path="../../../../../../components/libraries/log/nrf_log_types.h" left="0" top="40" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="45" y="124" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/ble_cus.c" path="../../../../../../components/softdevice/s132/headers/ble_gap.h" left="0" top="136" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="0" y="94" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/components/softdevice/s132/headers/ble_gap.h" path="../../../../../../components/softdevice/s132/headers/ble_ranges.h" left="0" top="87" codecName="Default"/>
+  <SessionOpenFile windowGroup="DockEditLeft" x="101" y="610" useTextEdit="1" openedFrom="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral/ble_app_template/ble_cus.h" path="../../../../../../components/softdevice/s132/headers/ble_gatts.h" left="32" top="600" codecName="Default"/>
+ </Files>
+ <EMStudioWindow activeProject="ble_app_template_pca10040_s132" fileDialogDefaultFilter="*.c" autoConnectTarget="J-Link" buildConfiguration="Debug" sessionSettings="" debugSearchFileMap="" fileDialogInitialDirectory="C:/Users/marys/OneDrive - Garmin/Documents/Garmin/nrf52 DK Programs/nRF5_SDK_17.1.0_ddde560/components/libraries/timer" debugSearchPath="" autoConnectCapabilities="3711"/>
+</session>
