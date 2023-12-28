@@ -152,7 +152,7 @@ static uint32_t custom_value_char_add(ble_cus_t * p_cus, const ble_cus_init_t * 
 
     //  Read  operation on cccd should be possible without authentication.
     BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.read_perm);
-    BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
+    //BLE_GAP_CONN_SEC_MODE_SET_OPEN(&cccd_md.write_perm);
     
     cccd_md.write_perm = p_cus_init->custom_value_char_attr_md.cccd_write_perm;
     cccd_md.vloc       = BLE_GATTS_VLOC_STACK;
@@ -160,7 +160,7 @@ static uint32_t custom_value_char_add(ble_cus_t * p_cus, const ble_cus_init_t * 
     memset(&char_md, 0, sizeof(char_md));
 
     char_md.char_props.read   = 1;
-    char_md.char_props.write  = 1;
+    //char_md.char_props.write  = 1;
     char_md.char_props.notify = 1; 
     char_md.p_char_user_desc  = NULL;
     char_md.p_char_pf         = NULL;
@@ -174,7 +174,7 @@ static uint32_t custom_value_char_add(ble_cus_t * p_cus, const ble_cus_init_t * 
     memset(&attr_md, 0, sizeof(attr_md));
 
     attr_md.read_perm  = p_cus_init->custom_value_char_attr_md.read_perm;
-    attr_md.write_perm = p_cus_init->custom_value_char_attr_md.write_perm;
+    //attr_md.write_perm = p_cus_init->custom_value_char_attr_md.write_perm;
     attr_md.vloc       = BLE_GATTS_VLOC_STACK;
     attr_md.rd_auth    = 0;
     attr_md.wr_auth    = 0;
