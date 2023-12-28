@@ -51,7 +51,7 @@ typedef struct ble_cus_s ble_cus_t;
 /**@brief Custom Service event handler type. */
 typedef void (*ble_cus_evt_handler_t) (ble_cus_t * p_bas, ble_cus_evt_t * p_evt);
 
-/**@brief Battery Service init structure. This contains all options and data needed for
+/**@brief Custom Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
 typedef struct
 {
@@ -91,19 +91,6 @@ uint32_t ble_cus_init(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init);
  * @param[in]   p_ble_evt  Event received from the BLE stack.
  */
 void ble_cus_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context);
-
-/**@brief Function for initializing the custom value.
- *
- * @details The application calls this function when the cutom value should be updated. If
- *          notification has been enabled, the custom value characteristic is sent to the client.
- *
- * @note 
- *       
- * @param[in]   p_bas          Custom Service structure.
- *
- * @return      NRF_SUCCESS on success, otherwise an error code.
- */
-uint32_t ble_cus_custom_value_init(ble_cus_t * p_cus);
 
 /**@brief Function for updating the custom value.
  *

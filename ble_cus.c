@@ -98,7 +98,7 @@ void ble_cus_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
 {
     ble_cus_t * p_cus = (ble_cus_t *) p_context;
     
-    NRF_LOG_INFO("BLE event received. Event type = %d\r\n", p_ble_evt->header.evt_id); 
+    //NRF_LOG_INFO("BLE event received. Event type = %d", p_ble_evt->header.evt_id); 
     if (p_cus == NULL || p_ble_evt == NULL)
     {
         return;
@@ -107,19 +107,22 @@ void ble_cus_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
     switch (p_ble_evt->header.evt_id)
     {
         case BLE_GAP_EVT_CONNECTED:
+            NRF_LOG_INFO("BLE event received. BLE_GAP_EVT_CONNECTED"); 
             on_connect(p_cus, p_ble_evt);
             break;
 
         case BLE_GAP_EVT_DISCONNECTED:
+            NRF_LOG_INFO("BLE event received. BLE_GAP_EVT_DISCONNECTED"); 
             on_disconnect(p_cus, p_ble_evt);
             break;
 
         case BLE_GATTS_EVT_WRITE:
+            NRF_LOG_INFO("BLE event received. BLE_GATTS_EVT_WRITE"); 
             on_write(p_cus, p_ble_evt);
             break;
 /* Handling this event is not necessary
         case BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST:
-            NRF_LOG_INFO("EXCHANGE_MTU_REQUEST event received.\r\n");
+            NRF_LOG_INFO("EXCHANGE_MTU_REQUEST event received.");
             break;
 */
         default:
@@ -130,7 +133,7 @@ void ble_cus_on_ble_evt( ble_evt_t const * p_ble_evt, void * p_context)
 
 /**@brief Function for adding the Custom Value characteristic.
  *
- * @param[in]   p_cus        Battery Service structure.
+ * @param[in]   p_cus        Custom Service structure.
  * @param[in]   p_cus_init   Information needed to initialize the service.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
@@ -196,6 +199,40 @@ static uint32_t custom_value_char_add(ble_cus_t * p_cus, const ble_cus_init_t * 
     return NRF_SUCCESS;
 }
 
+/**@brief Function for initializing the custom value.
+ *
+ * @details The application calls this function to init the custom data.
+ *
+ * @note 
+ *       
+ * @param[in]   p_cus          Custom Service structure.
+ *
+ * @return      NRF_SUCCESS on success, otherwise an error code.
+ */
+static uint32_t custom_value_init(ble_cus_t * p_cus)
+{
+    NRF_LOG_INFO("In ble_cus_custom_value_init."); 
+    if (p_cus == NULL)
+    {
+        return NRF_ERROR_NULL;
+    }
+
+    uint8_t value_buffer[PAYLOAD_SIZE_BYTES] = {0};
+    ble_gatts_value_t gatts_value;
+
+    // Initialize value struct.
+    memset(&gatts_value, 0, sizeof(gatts_value));
+
+    gatts_value.len     = PAYLOAD_SIZE_BYTES*sizeof(uint8_t);
+    gatts_value.offset  = 0;
+    gatts_value.p_value = value_buffer;
+
+    // Update database.
+    return sd_ble_gatts_value_set(p_cus->conn_handle,
+                                  p_cus->custom_value_handles.value_handle,
+                                  &gatts_value);
+}
+
 uint32_t ble_cus_init(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init)
 {
     if (p_cus == NULL || p_cus_init == NULL)
@@ -232,36 +269,12 @@ uint32_t ble_cus_init(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init)
         return err_code;
     }
 
-    return ble_cus_custom_value_init(p_cus);
-}
-
-uint32_t ble_cus_custom_value_init(ble_cus_t * p_cus)
-{
-    NRF_LOG_INFO("In ble_cus_custom_value_init. \r\n"); 
-    if (p_cus == NULL)
-    {
-        return NRF_ERROR_NULL;
-    }
-
-    uint8_t value_buffer[PAYLOAD_SIZE_BYTES] = {0};
-    ble_gatts_value_t gatts_value;
-
-    // Initialize value struct.
-    memset(&gatts_value, 0, sizeof(gatts_value));
-
-    gatts_value.len     = PAYLOAD_SIZE_BYTES*sizeof(uint8_t);
-    gatts_value.offset  = 0;
-    gatts_value.p_value = value_buffer;
-
-    // Update database.
-    return sd_ble_gatts_value_set(p_cus->conn_handle,
-                                  p_cus->custom_value_handles.value_handle,
-                                  &gatts_value);
+    return custom_value_init(p_cus);
 }
 
 uint32_t ble_cus_custom_value_update(ble_cus_t * p_cus, uint8_t* custom_value)
 {
-    NRF_LOG_INFO("In ble_cus_custom_value_update. \r\n"); 
+    NRF_LOG_INFO("In ble_cus_custom_value_update."); 
     if (p_cus == NULL || custom_value == NULL)
     {
         return NRF_ERROR_NULL;
@@ -300,14 +313,21 @@ uint32_t ble_cus_custom_value_update(ble_cus_t * p_cus, uint8_t* custom_value)
         hvx_params.p_data = gatts_value.p_value;
 
         err_code = sd_ble_gatts_hvx(p_cus->conn_handle, &hvx_params);
-        NRF_LOG_INFO("sd_ble_gatts_hvx result: %x. \r\n", err_code);
+        if (err_code == NRF_SUCCESS)
+        {
+            NRF_LOG_INFO("successfully notified\n");
+        }
+        else
+        {
+            NRF_LOG_INFO("sd_ble_gatts_hvx result: %x.", err_code);
+        }
         // TODO: learn how to check if notifications are currently enabled by the application
         // Currently we crash here if we try to write while we aren't registered for notifications
     }
     else
     {
         err_code = NRF_ERROR_INVALID_STATE;
-        NRF_LOG_INFO("sd_ble_gatts_hvx result: NRF_ERROR_INVALID_STATE. \r\n"); 
+        NRF_LOG_INFO("sd_ble_gatts_hvx result: NRF_ERROR_INVALID_STATE."); 
     }
 
 
