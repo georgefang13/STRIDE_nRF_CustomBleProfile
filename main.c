@@ -267,7 +267,7 @@ static void notification_timeout_handler(void * p_context)
     ble_cus_t* p_cus = (ble_cus_t*)p_context;
     ret_code_t err_code;
 
-    uint8_t value_buffer[PAYLOAD_SIZE_BYTES] = {0};
+    uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
     ble_gatts_value_t value = {.len = sizeof(value_buffer),
                                .offset = 0,
                                .p_value = &(value_buffer[0])};
@@ -278,7 +278,7 @@ static void notification_timeout_handler(void * p_context)
     NRF_LOG_INFO("sd_ble_gatts_value_get: Len=%i, Offset=%i, err_code=%i",
                  value.len, value.offset, err_code);
     if (value.p_value) {
-      for (uint8_t i = 0; i < PAYLOAD_SIZE_BYTES; i++) {
+      for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
         NRF_LOG_INFO("Pre-update:  %i-%i", i, value_buffer[i]);
         value_buffer[i] = value_buffer[i] + 1;
         NRF_LOG_INFO("Post-update: %i-%i", i, value_buffer[i]);
@@ -705,7 +705,29 @@ static void bsp_event_handler(bsp_event_t event)
                     APP_ERROR_CHECK(err_code);
                 }
             }
-            break; // BSP_EVENT_KEY_0
+            break;
+
+        case BSP_EVENT_KEY_0:  // Button 1
+		    // This currently causes the dev-kit to crash...so let's avoid pressing Button 1
+            NRF_LOG_INFO("Button 1 pressed");
+            break;
+
+        case BSP_EVENT_KEY_1:  // Button 2
+            NRF_LOG_INFO("Button 2 pressed");
+            break;
+
+        case BSP_EVENT_KEY_2:  // Button 3
+            NRF_LOG_INFO("Button 3 pressed");
+            break;
+
+        case BSP_EVENT_KEY_3:  // Button 4
+            NRF_LOG_INFO("Button 4 pressed");
+            err_code = ble_cus_led4_update(&m_cus, true);
+            if (err_code != NRF_ERROR_INVALID_STATE)
+            {
+                APP_ERROR_CHECK(err_code);
+            }
+            break;
 
         default:
             break;
@@ -822,8 +844,9 @@ int main(void)
     log_init();
     timers_init();
     buttons_leds_init(&erase_bonds);
-    bsp_board_led_on(SANITY_LED);
-    NRF_LOG_INFO("LED ON.");
+    // re-purposing LED_4
+    //bsp_board_led_on(SANITY_LED);
+    //NRF_LOG_INFO("LED 4 ON.");
     power_management_init();
     ble_stack_init();
     gap_params_init();
