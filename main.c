@@ -117,7 +117,6 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-
 NRF_BLE_GATT_DEF(m_gatt);
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< GATT module instance. */
 BLE_CUS_DEF(m_cus);                                                             /**< Context for the Queued Write module.*/
@@ -136,6 +135,14 @@ static ble_uuid_t m_adv_uuids[] =                                               
 {
     {CUSTOM_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN }
 };
+
+static void print_payload_array(char* prepended_string, uint8_t* payload_array)
+{
+    // If VALUE_PAYLOAD_SIZE_BYTES changes, update this function to update the handling for printing the payload array properly
+    STATIC_ASSERT(VALUE_PAYLOAD_SIZE_BYTES == 3, "main.c:print_payload_array number of printed bytes mismatches payload size - update print logic");
+    // Pass in empty string for prepended_string if no prepended string is desired
+    NRF_LOG_INFO("%s%i %i %i", prepended_string, payload_array[0], payload_array[1], payload_array[2]);
+}
 
 
 static void advertising_start(bool erase_bonds);
@@ -278,11 +285,11 @@ static void notification_timeout_handler(void * p_context)
     NRF_LOG_INFO("sd_ble_gatts_value_get: Len=%i, Offset=%i, err_code=%i",
                  value.len, value.offset, err_code);
     if (value.p_value) {
+      print_payload_array("Pre-update:  ", value_buffer);
       for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
-        NRF_LOG_INFO("Pre-update:  %i-%i", i, value_buffer[i]);
         value_buffer[i] = value_buffer[i] + 1;
-        NRF_LOG_INFO("Post-update: %i-%i", i, value_buffer[i]);
       }
+      print_payload_array("Post-update: ", value_buffer);
       err_code = ble_cus_custom_value_update(&m_cus, value.p_value);
       APP_ERROR_CHECK(err_code);
     } else {
