@@ -141,7 +141,12 @@ RTT is natively supported by SES, so it's a simple method of communicating with 
     * ![RTT Connected](images/rtt_viewer_connected.png)
 
 # Your Turn
-Now that you've programmed the nRF52 DK with a basic application, try programming the provided generic_ble_profile_wip application. You should be able to copy + paste its contents into the contents of an example application (ble_peripheral/ble_app_template, for example).
+Now that you've programmed the nRF52 DK with a basic application, try programming the provided application with generic BLE data.
+You should be able to clone this repo to your local PC in the SDK's ble example folder, a set of commands similar to the following:  
+```
+cd  <path_to_your_SDK/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral>  
+git  clone https://github.com/4djelliot/nRF_CustomBleProfile.git  ble_app_template
+```
 
 This application results in the nRF52 DK advertising via BLE with the name GDuk. Using nRF Connect (Mobile), you can connect to the device and read, write, and register for notifications for its custom data field.
 
