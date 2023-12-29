@@ -1,6 +1,9 @@
 # nRF52 Getting Started Guide
 This guide will assist you in getting started with development for the [nRF52 DK](https://www.nordicsemi.com/Products/Development-hardware/nRF52-DK/GetStarted?lang=en#infotabs). First, we will walk you through hardware and software requirements and how to install the necessary software. Then, we will walk through a couple of guides to get you comfortable with development.
 
+> [!WARNING]
+> Be sure to complete Step 1 of this guide prior to cloning this repo, since we recommend cloning this repo into the examples/ble_peripheral folder of your nRF5 SDK. See Step 5 for sample commands.
+
 # Step 1: Gather, Install, and Setup System Requirements
 ## Hardware
 The following hardware will be required for developing with the nRF52 DK:
@@ -140,9 +143,9 @@ RTT is natively supported by SES, so it's a simple method of communicating with 
 3. Select "Ok", observe the terminal changes:
     * ![RTT Connected](images/rtt_viewer_connected.png)
 
-# Your Turn
+# Step 5: Your Turn
 Now that you've programmed the nRF52 DK with a basic application, try programming the provided application with generic BLE data.
-You should be able to clone this repo to your local PC in the SDK's ble example folder, a set of commands similar to the following:  
+You should be able to clone this repo to your local PC in the SDK's ble example folder using a set of commands similar to the following:
 ```
 cd  <path_to_your_SDK/nRF5_SDK_17.1.0_ddde560/examples/ble_peripheral>  
 git  clone https://github.com/4djelliot/nRF_CustomBleProfile.git  ble_app_template
