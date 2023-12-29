@@ -32,15 +32,17 @@
 
 /**@brief Custom Service event type. */
 typedef enum {
-    BLE_CUS_EVT_NOTIFICATION_ENABLED,  /**< Custom value notification enabled event. */
-    BLE_CUS_EVT_NOTIFICATION_DISABLED, /**< Custom value notification disabled event. */
+    // Custom value notification enabled event
+    BLE_CUS_EVT_NOTIFICATION_ENABLED,
+    // Custom value notification disabled event
+    BLE_CUS_EVT_NOTIFICATION_DISABLED,
     BLE_CUS_EVT_DISCONNECTED,
     BLE_CUS_EVT_CONNECTED
 } ble_cus_evt_type_t;
 
 /**@brief Custom Service event. */
 typedef struct {
-    /**< Type of event. */
+    // Type of event
     ble_cus_evt_type_t evt_type;
 } ble_cus_evt_t;
 
@@ -53,25 +55,25 @@ typedef void (*ble_cus_evt_handler_t)(ble_cus_t* p_bas, ble_cus_evt_t* p_evt);
 /**@brief Custom Service init structure. This contains all options and data needed for
  *        initialization of the service.*/
 typedef struct {
-    /**< Event handler to be called for handling events in the Custom Service. */
+    // Event handler to be called for handling events in the Custom Service
     ble_cus_evt_handler_t evt_handler;
-    /**< Initial custom value */
+    // Initial custom value
     uint8_t initial_custom_value;
-    /**< Initial security level for Custom characteristics attribute */
+    // Initial security level for Custom characteristics attribute
     ble_srv_cccd_security_mode_t custom_value_char_attr_md;
 } ble_cus_init_t;
 
 /**@brief Custom Service structure. This contains various status information for the service. */
 struct ble_cus_s {
-    /**< Event handler to be called for handling events in the Custom Service. */
+    // Event handler to be called for handling events in the Custom Service
     ble_cus_evt_handler_t evt_handler;
-    /**< Handle of Custom Service (as provided by the BLE stack). */
+    // Handle of Custom Service (as provided by the BLE stack)
     uint16_t service_handle;
-    /**< Handles related to the Custom Value characteristic. */
+    // Handles related to the Custom Value characteristic
     ble_gatts_char_handles_t custom_value_handles;
     ble_gatts_char_handles_t custom_led_handles;
-    /**< Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID
-     * if not in a connection). */
+    // Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if
+    // not in a connection)
     uint16_t conn_handle;
     uint8_t uuid_type;
 };

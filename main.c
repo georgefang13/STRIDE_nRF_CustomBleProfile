@@ -95,7 +95,6 @@
 #define ADVERTISING_LED                 BSP_BOARD_LED_0                         /**< Is on when device is advertising. */
 #define CONNECTED_LED                   BSP_BOARD_LED_1                         /**< Is on when device has connected. */
 #define WHOOPS_LED                      BSP_BOARD_LED_2                         /**< Is on when advertising was already started in other area? */
-#define SANITY_LED                      BSP_BOARD_LED_3                         /**< Is on when device hits main method */
 
 #define MIN_CONN_INTERVAL               MSEC_TO_UNITS(100, UNIT_1_25_MS)        /**< Minimum acceptable connection interval (0.1 seconds). */
 #define MAX_CONN_INTERVAL               MSEC_TO_UNITS(200, UNIT_1_25_MS)        /**< Maximum acceptable connection interval (0.2 second). */
@@ -128,11 +127,6 @@ APP_TIMER_DEF(m_notification_timer_id);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
-/* YOUR_JOB: Declare all services structure your application is using
- *  BLE_XYZ_DEF(m_xyz);
- */
-
-// YOUR_JOB: Use UUIDs for service(s) used in your application.
 static ble_uuid_t m_adv_uuids[] =                                               /**< Universally unique service identifiers. */
 {
     {CUSTOM_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN }
@@ -140,17 +134,6 @@ static ble_uuid_t m_adv_uuids[] =                                               
 
 // clang-format on
 // Formatting returns
-
-static void print_payload_array(char* prepended_string, uint8_t* payload_array) {
-    // If VALUE_PAYLOAD_SIZE_BYTES changes, update this function to update the handling for printing
-    // the payload array properly
-    STATIC_ASSERT(
-        VALUE_PAYLOAD_SIZE_BYTES == 3,
-        "main.c:print_payload_array number of printed bytes mismatches payload size - update print logic");
-    // Pass in empty string for prepended_string if no prepended string is desired
-    NRF_LOG_INFO("%s%i %i %i", prepended_string, payload_array[0], payload_array[1],
-                 payload_array[2]);
-}
 
 static void advertising_start(bool erase_bonds);
 
@@ -470,7 +453,7 @@ static void conn_params_init(void) {
 /**@brief Function for starting timers.
  */
 static void application_timers_start(void) {
-    /* YOUR_JOB: Start your timers. below is an example of how to start a timer.
+    /* YOUR_JOB (if needed): Start your timers. below is an example of how to start a timer.
        ret_code_t err_code;
        err_code = app_timer_start(m_app_timer_id, TIMER_INTERVAL, NULL);
        APP_ERROR_CHECK(err_code); */
@@ -796,9 +779,6 @@ int main(void) {
     log_init();
     timers_init();
     buttons_leds_init(&erase_bonds);
-    // re-purposing LED_4
-    // bsp_board_led_on(SANITY_LED);
-    // NRF_LOG_INFO("LED 4 ON.");
     power_management_init();
     ble_stack_init();
     gap_params_init();
