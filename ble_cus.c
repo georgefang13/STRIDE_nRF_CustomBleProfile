@@ -46,6 +46,7 @@ static void on_disconnect(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
  */
 static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
 {
+    NRF_LOG_INFO("on_write");
     ble_gatts_evt_write_t const * p_evt_write = &p_ble_evt->evt.gatts_evt.params.write;
     
     // Check if the Custom value CCCD is written to and that the value is the appropriate length, i.e 2 bytes.
@@ -53,7 +54,7 @@ static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
     // This case is required in order for app_timer_start() to be called in main.c's on_cus_evt() via evt_handler() below
     if ((p_evt_write->handle == p_cus->custom_value_handles.cccd_handle) && (p_evt_write->len == 2))
     {
-        // CCCD written, call application event handler
+        NRF_LOG_INFO("CCCD written, call application event handler");
         if (p_cus->evt_handler != NULL)
         {
             ble_cus_evt_t evt;
@@ -73,9 +74,9 @@ static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
         }
     }
 
-    // Custom Value Characteristic written to
     if (p_evt_write->handle == p_cus->custom_value_handles.value_handle)
     {
+        NRF_LOG_INFO("Custom Value Characteristic written to");
         // nrf_gpio_pin_toggle(LED_4);
         NRF_LOG_INFO("Attempt to write custom data\n");
         NRF_LOG_INFO("Value=%u\n", *p_evt_write->data);
@@ -83,9 +84,9 @@ static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
         APP_ERROR_CHECK(err_code);
     }
 
-    // Custom LED Characteristic written to
     if (p_evt_write->handle == p_cus->custom_led_handles.value_handle)
     {
+        NRF_LOG_INFO("Custom LED Characteristic written to");
         if (p_evt_write->len == LED_PAYLOAD_SIZE_BYTES)
         {
             uint8_t data_written = p_evt_write->data[0];
