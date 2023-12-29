@@ -319,6 +319,7 @@ static void on_cus_evt(ble_cus_t* p_cus_service, ble_cus_evt_t* p_evt) {
 
     switch (p_evt->evt_type) {
         case BLE_CUS_EVT_NOTIFICATION_ENABLED:
+            // send an immediate notify via notification_timeout_handler()
             notification_timeout_handler(&m_cus);
             err_code =
                 app_timer_start(m_notification_timer_id, NOTIFICATION_INTERVAL, p_cus_service);

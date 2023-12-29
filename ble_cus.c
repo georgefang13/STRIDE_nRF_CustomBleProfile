@@ -275,6 +275,9 @@ static uint32_t custom_value_init(ble_cus_t* p_cus) {
     }
 
     uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
+#if (HELLO_WORLD)
+    memcpy(value_buffer, HELLO_WORLD_STR, sizeof(value_buffer));
+#endif
     ble_gatts_value_t gatts_value;
 
     // Initialize value struct.
@@ -379,6 +382,19 @@ uint32_t ble_cus_init(ble_cus_t* p_cus, const ble_cus_init_t* p_cus_init) {
  */
 static void custom_value_update(uint8_t* value_buffer) {
     if (value_buffer) {
+#if (HELLO_WORLD)
+        static char pre_string[VALUE_PAYLOAD_SIZE_BYTES];
+        static char post_string[VALUE_PAYLOAD_SIZE_BYTES];
+        pre_string[0] = '\0';
+        post_string[0] = '\0';
+        memcpy(pre_string, value_buffer, sizeof(pre_string));
+        char first_letter = value_buffer[0];
+        memmove(value_buffer, value_buffer + 1, VALUE_PAYLOAD_SIZE_BYTES - 1);
+        value_buffer[VALUE_PAYLOAD_SIZE_BYTES - 2] = first_letter;
+        memcpy(post_string, value_buffer, sizeof(pre_string));
+        NRF_LOG_INFO(" pre_string  > %s", pre_string);
+        NRF_LOG_INFO(" post_string > %s", post_string);
+#else
 #define STR_LEN (9 + VALUE_PAYLOAD_SIZE_BYTES * 4 + 1)
         static char indexes_string[STR_LEN];
         static char pre_string[STR_LEN];
@@ -399,9 +415,10 @@ static void custom_value_update(uint8_t* value_buffer) {
             value_buffer[i] = value_buffer[i] + 1;
             post_ptr += sprintf(post_ptr, "%3u,", value_buffer[i]);
         }
-        NRF_LOG_INFO(" > %s", indexes_string);
-        NRF_LOG_INFO(" > %s", pre_string);
-        NRF_LOG_INFO(" > %s", post_string);
+        NRF_LOG_INFO(" i    > %s", indexes_string);
+        NRF_LOG_INFO(" pre  > %s", pre_string);
+        NRF_LOG_INFO(" post > %s", post_string);
+#endif
     } else {
         NRF_LOG_INFO("NULL value_buffer");
     }
@@ -417,7 +434,7 @@ uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus) {
 
     uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
     ble_gatts_value_t gatts_value = {
-        .len = sizeof(value_buffer), .offset = 0, .p_value = &(value_buffer[0])};
+        .len = VALUE_PAYLOAD_SIZE_BYTES, .offset = 0, .p_value = &(value_buffer[0])};
     err_code = sd_ble_gatts_value_get(p_cus->conn_handle, p_cus->custom_value_handles.value_handle,
                                       &gatts_value);
     APP_ERROR_CHECK(err_code);

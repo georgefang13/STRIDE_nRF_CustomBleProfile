@@ -6,7 +6,14 @@
 #include "ble.h"
 #include "ble_srv_common.h"
 
+// HELLO_WORLD will send a string in custom data, otherwise just generic data
+#define HELLO_WORLD 1
+#if (HELLO_WORLD)
+#define HELLO_WORLD_STR "Hello World"
+#define VALUE_PAYLOAD_SIZE_BYTES sizeof(HELLO_WORLD_STR)
+#else
 #define VALUE_PAYLOAD_SIZE_BYTES 3
+#endif
 #define LED_PAYLOAD_SIZE_BYTES 1
 
 /**@brief   Macro for defining a ble_hrs instance.
