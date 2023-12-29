@@ -9,7 +9,7 @@
 // HELLO_WORLD will send a string in custom data, otherwise just generic data
 #define HELLO_WORLD 1
 #if (HELLO_WORLD)
-#define HELLO_WORLD_STR "Hello World"
+#define HELLO_WORLD_STR "Hello_World_"
 #define VALUE_PAYLOAD_SIZE_BYTES sizeof(HELLO_WORLD_STR)
 #else
 #define VALUE_PAYLOAD_SIZE_BYTES 3

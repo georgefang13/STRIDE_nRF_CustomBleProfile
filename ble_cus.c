@@ -277,6 +277,10 @@ static uint32_t custom_value_init(ble_cus_t* p_cus) {
     uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
 #if (HELLO_WORLD)
     memcpy(value_buffer, HELLO_WORLD_STR, sizeof(value_buffer));
+#else
+    for (int i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
+        value_buffer[i] = i;
+    }
 #endif
     ble_gatts_value_t gatts_value;
 
@@ -412,7 +416,7 @@ static void custom_value_update(uint8_t* value_buffer) {
             indexes_ptr += sprintf(indexes_ptr, "%3u,", i);
             pre_ptr += sprintf(pre_ptr, "%3u,", value_buffer[i]);
             // The next line is the only real work here, all else is debug related
-            value_buffer[i] = value_buffer[i] + 1;
+            value_buffer[i] = value_buffer[i] + VALUE_PAYLOAD_SIZE_BYTES;
             post_ptr += sprintf(post_ptr, "%3u,", value_buffer[i]);
         }
         NRF_LOG_INFO(" i    > %s", indexes_string);
