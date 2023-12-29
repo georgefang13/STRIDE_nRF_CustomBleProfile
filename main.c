@@ -243,46 +243,8 @@ static void notification_timeout_handler(void* p_context) {
     ble_cus_t* p_cus = (ble_cus_t*)p_context;
     ret_code_t err_code;
 
-    uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
-    ble_gatts_value_t value = {
-        .len = sizeof(value_buffer), .offset = 0, .p_value = &(value_buffer[0])};
-
-    err_code = sd_ble_gatts_value_get(p_cus->conn_handle, p_cus->custom_value_handles.value_handle,
-                                      &value);
+    err_code = ble_cus_custom_value_update(&m_cus);
     APP_ERROR_CHECK(err_code);
-
-    NRF_LOG_INFO(
-        "notification_timeout_handler(), sd_ble_gatts_value_get: Len=%i, Offset=%i, err_code=%i",
-        value.len, value.offset, err_code);
-    if (value.p_value) {
-#define STR_LEN (9 + VALUE_PAYLOAD_SIZE_BYTES * 4 + 1)
-        static char indexes_string[STR_LEN];
-        static char pre_string[STR_LEN];
-        static char post_string[STR_LEN];
-        indexes_string[0] = '\0';
-        pre_string[0] = '\0';
-        post_string[0] = '\0';
-        char* indexes_ptr = indexes_string;
-        char* pre_ptr = pre_string;
-        char* post_ptr = post_string;
-        indexes_ptr += sprintf(indexes_ptr, "indexes: ");
-        pre_ptr += sprintf(pre_ptr, "    pre: ");
-        post_ptr += sprintf(post_ptr, "   post: ");
-        for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
-            indexes_ptr += sprintf(indexes_ptr, "%3u,", i);
-            pre_ptr += sprintf(pre_ptr, "%3u,", value_buffer[i]);
-            // The next line is the only real work here, all else is debug related
-            value_buffer[i] = value_buffer[i] + 1;
-            post_ptr += sprintf(post_ptr, "%3u,", value_buffer[i]);
-        }
-        NRF_LOG_INFO("%s", indexes_string);
-        NRF_LOG_INFO("%s", pre_string);
-        NRF_LOG_INFO("%s", post_string);
-        err_code = ble_cus_custom_value_update(&m_cus, value.p_value);
-        APP_ERROR_CHECK(err_code);
-    } else {
-        NRF_LOG_INFO("NULL value_buffer");
-    }
 }
 
 /**@brief Function for the Timer initialization.

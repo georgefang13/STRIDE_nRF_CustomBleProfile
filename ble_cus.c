@@ -70,12 +70,10 @@ static void on_write(ble_cus_t* p_cus, ble_evt_t const* p_ble_evt) {
     }
 
     if (p_evt_write->handle == p_cus->custom_value_handles.value_handle) {
+        // This should not be possible as the Custom Value is read-only
         NRF_LOG_INFO("Custom Value Characteristic written to");
-        // nrf_gpio_pin_toggle(LED_4);
         NRF_LOG_INFO("Attempt to write custom data\n");
         NRF_LOG_INFO("Value=%u\n", *p_evt_write->data);
-        ret_code_t err_code = ble_cus_custom_value_update(p_cus, p_evt_write->data);
-        APP_ERROR_CHECK(err_code);
     }
 
     if (p_evt_write->handle == p_cus->custom_led_handles.value_handle) {
@@ -370,21 +368,64 @@ uint32_t ble_cus_init(ble_cus_t* p_cus, const ble_cus_init_t* p_cus_init) {
     return err_code;
 }
 
-uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus, uint8_t* custom_value) {
+/**@brief Function for update the custom data.
+ *
+ * @details This is where the value is actually updated, i.e. where logic should live to gather,
+ * summarize, modify, etc.
+ *
+ * @note
+ *
+ * @param[in]   value_buffer          pointer to the data to be updated
+ */
+static void custom_value_update(uint8_t* value_buffer) {
+    if (value_buffer) {
+#define STR_LEN (9 + VALUE_PAYLOAD_SIZE_BYTES * 4 + 1)
+        static char indexes_string[STR_LEN];
+        static char pre_string[STR_LEN];
+        static char post_string[STR_LEN];
+        indexes_string[0] = '\0';
+        pre_string[0] = '\0';
+        post_string[0] = '\0';
+        char* indexes_ptr = indexes_string;
+        char* pre_ptr = pre_string;
+        char* post_ptr = post_string;
+        indexes_ptr += sprintf(indexes_ptr, "indexes: ");
+        pre_ptr += sprintf(pre_ptr, "    pre: ");
+        post_ptr += sprintf(post_ptr, "   post: ");
+        for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
+            indexes_ptr += sprintf(indexes_ptr, "%3u,", i);
+            pre_ptr += sprintf(pre_ptr, "%3u,", value_buffer[i]);
+            // The next line is the only real work here, all else is debug related
+            value_buffer[i] = value_buffer[i] + 1;
+            post_ptr += sprintf(post_ptr, "%3u,", value_buffer[i]);
+        }
+        NRF_LOG_INFO(" > %s", indexes_string);
+        NRF_LOG_INFO(" > %s", pre_string);
+        NRF_LOG_INFO(" > %s", post_string);
+    } else {
+        NRF_LOG_INFO("NULL value_buffer");
+    }
+}
+
+uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus) {
     NRF_LOG_INFO("In ble_cus_custom_value_update.");
-    if (p_cus == NULL || custom_value == NULL) {
+    if (p_cus == NULL) {
         return NRF_ERROR_NULL;
     }
 
     uint32_t err_code = NRF_SUCCESS;
-    ble_gatts_value_t gatts_value;
 
-    // Initialize value struct.
-    memset(&gatts_value, 0, sizeof(gatts_value));
+    uint8_t value_buffer[VALUE_PAYLOAD_SIZE_BYTES] = {0};
+    ble_gatts_value_t gatts_value = {
+        .len = sizeof(value_buffer), .offset = 0, .p_value = &(value_buffer[0])};
+    err_code = sd_ble_gatts_value_get(p_cus->conn_handle, p_cus->custom_value_handles.value_handle,
+                                      &gatts_value);
+    APP_ERROR_CHECK(err_code);
+    NRF_LOG_DEBUG("  sd_ble_gatts_value_get: Len=%i, Offset=%i, err_code=%i", gatts_value.len,
+                  gatts_value.offset, err_code);
 
-    gatts_value.len = VALUE_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
-    gatts_value.offset = 0;
-    gatts_value.p_value = custom_value;
+    // Now actually update the data
+    custom_value_update(value_buffer);
 
     // Update database.
     err_code = sd_ble_gatts_value_set(p_cus->conn_handle, p_cus->custom_value_handles.value_handle,

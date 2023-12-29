@@ -108,11 +108,10 @@ void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_context);
  * @note
  *
  * @param[in]   p_bas          Custom Service structure.
- * @param[in]   Custom value
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus, uint8_t* custom_value);
+uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus);
 
 /**@brief Function for updating the LED data.
  *
