@@ -118,6 +118,9 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
+#define GPIO_P0_11_DIG_OUT 11  // P0.11
+#define GPIO_P0_11_DIG_IN_PULLUP 12  // P0.12
+
 NRF_BLE_GATT_DEF(m_gatt);
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< GATT module instance. */
 BLE_CUS_DEF(m_cus);                                                             /**< Context for the Queued Write module.*/
@@ -245,6 +248,14 @@ static void notification_timeout_handler(void* p_context) {
 
     err_code = ble_cus_custom_value_update(&m_cus);
     APP_ERROR_CHECK(err_code);
+
+    // Intentionally commented out, if need state use nrf_gpio_pin_out_read() with
+    // nrf_gpio_pin_set() and/or nrf_gpio_pin_clear().
+    // uint32_t current_state = nrf_gpio_pin_out_read(GPIO_P0_11_DIG_OUT);
+    nrf_gpio_pin_toggle(GPIO_P0_11_DIG_OUT);
+
+    uint32_t pin11 = nrf_gpio_pin_read(GPIO_P0_11_DIG_IN_PULLUP);
+    NRF_LOG_INFO("pin11 %i", pin11);
 }
 
 /**@brief Function for the Timer initialization.
@@ -691,6 +702,12 @@ static void buttons_leds_init(bool* p_erase_bonds) {
     *p_erase_bonds = (startup_event == BSP_EVENT_CLEAR_BONDING_DATA);
 }
 
+static void gpios_init() {
+    nrf_gpio_cfg_output(GPIO_P0_11_DIG_OUT);
+    nrf_gpio_cfg_input(GPIO_P0_11_DIG_IN_PULLUP, NRF_GPIO_PIN_PULLUP);
+}
+
+
 /**@brief Function for initializing the nrf log module.
  */
 static void log_init(void) {
@@ -742,6 +759,7 @@ int main(void) {
     log_init();
     timers_init();
     buttons_leds_init(&erase_bonds);
+    gpios_init();
     power_management_init();
     ble_stack_init();
     gap_params_init();
