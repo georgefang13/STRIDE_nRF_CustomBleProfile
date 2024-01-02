@@ -647,7 +647,7 @@ static void bsp_event_handler(bsp_event_t event) {
 
         case BSP_EVENT_KEY_3:  // Button 4
             NRF_LOG_INFO("Button 4 pressed");
-            err_code = ble_cus_led4_update(&m_cus, true);
+            err_code = ble_cus_led4_update(&m_cus);
             if (err_code != NRF_ERROR_INVALID_STATE) {
                 APP_ERROR_CHECK(err_code);
             }

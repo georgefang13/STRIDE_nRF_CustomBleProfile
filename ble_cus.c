@@ -76,19 +76,19 @@ static void on_write(ble_cus_t* p_cus, ble_evt_t const* p_ble_evt) {
         NRF_LOG_INFO("Value=%u\n", *p_evt_write->data);
     }
 
-    if (p_evt_write->handle == p_cus->custom_led_handles.value_handle) {
-        NRF_LOG_INFO("Custom LED Characteristic written to");
-        if (p_evt_write->len == LED_PAYLOAD_SIZE_BYTES) {
-            uint8_t data_written = p_evt_write->data[0];
-            bool want_led4_on = data_written >= 1;  // no real data checking
+    if (p_evt_write->handle == p_cus->custom_gpio_handles.value_handle) {
+        NRF_LOG_INFO("Custom GPIO Characteristic written to");
+        if (p_evt_write->len == GPIO_PAYLOAD_SIZE_BYTES) {
+            uint8_t led4_data_received = p_evt_write->data[GPIO_PAYLOAD_INDEX_LED4];
+            bool want_led4_on = led4_data_received >= 1;  // no real data checking
             bool is_led4_on = nrf_gpio_pin_out_read(LED_4) == LEDS_ACTIVE_STATE;
-            NRF_LOG_INFO("data_written: %u", data_written);
+            NRF_LOG_INFO("led4_data_received: %u", led4_data_received);
             NRF_LOG_INFO("want_led4_on: %i, is_led4_on: %i", want_led4_on, is_led4_on);
             if (want_led4_on != is_led4_on) {
                 nrf_gpio_pin_toggle(LED_4);
             }
         } else {
-            NRF_LOG_INFO("CUSTOM_LED_CHAR_UUID written to but with unexpected size: %u",
+            NRF_LOG_INFO("CUSTOM_GPIO_CHAR_UUID written to but with unexpected size: %u",
                          p_evt_write->len);
         }
     }
@@ -193,14 +193,14 @@ static uint32_t custom_value_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_
     return NRF_SUCCESS;
 }
 
-/**@brief Function for adding the Custom LED characteristic.
+/**@brief Function for adding the Custom GPIO characteristic.
  *
  * @param[in]   p_cus        Custom Service structure.
  * @param[in]   p_cus_init   Information needed to initialize the service.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static uint32_t custom_led_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_cus_init) {
+static uint32_t custom_gpio_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_cus_init) {
     uint32_t err_code;
     ble_gatts_char_md_t char_md;
     ble_gatts_attr_md_t cccd_md;
@@ -230,7 +230,7 @@ static uint32_t custom_led_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_cu
     char_md.p_sccd_md = NULL;
 
     ble_uuid.type = p_cus->uuid_type;
-    ble_uuid.uuid = CUSTOM_LED_CHAR_UUID;
+    ble_uuid.uuid = CUSTOM_GPIO_CHAR_UUID;
 
     memset(&attr_md, 0, sizeof(attr_md));
 
@@ -245,12 +245,12 @@ static uint32_t custom_led_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_cu
 
     attr_char_value.p_uuid = &ble_uuid;
     attr_char_value.p_attr_md = &attr_md;
-    attr_char_value.init_len = LED_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
+    attr_char_value.init_len = GPIO_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
     attr_char_value.init_offs = 0;
-    attr_char_value.max_len = LED_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
+    attr_char_value.max_len = GPIO_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
 
     err_code = sd_ble_gatts_characteristic_add(p_cus->service_handle, &char_md, &attr_char_value,
-                                               &p_cus->custom_led_handles);
+                                               &p_cus->custom_gpio_handles);
     if (err_code != NRF_SUCCESS) {
         return err_code;
     }
@@ -308,24 +308,24 @@ static uint32_t custom_value_init(ble_cus_t* p_cus) {
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-static uint32_t custom_led_init(ble_cus_t* p_cus) {
-    NRF_LOG_INFO("In custom_led_init.");
+static uint32_t custom_gpio_init(ble_cus_t* p_cus) {
+    NRF_LOG_INFO("In custom_gpio_init.");
     if (p_cus == NULL) {
         return NRF_ERROR_NULL;
     }
 
-    uint8_t value_buffer[LED_PAYLOAD_SIZE_BYTES] = {0};
+    uint8_t value_buffer[GPIO_PAYLOAD_SIZE_BYTES] = {0};
     ble_gatts_value_t gatts_value;
 
     // Initialize value struct.
     memset(&gatts_value, 0, sizeof(gatts_value));
 
-    gatts_value.len = LED_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
+    gatts_value.len = GPIO_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
     gatts_value.offset = 0;
     gatts_value.p_value = value_buffer;
 
     // Update database.
-    return sd_ble_gatts_value_set(p_cus->conn_handle, p_cus->custom_led_handles.value_handle,
+    return sd_ble_gatts_value_set(p_cus->conn_handle, p_cus->custom_gpio_handles.value_handle,
                                   &gatts_value);
 }
 
@@ -367,12 +367,12 @@ uint32_t ble_cus_init(ble_cus_t* p_cus, const ble_cus_init_t* p_cus_init) {
         return err_code;
     }
 
-    err_code = custom_led_char_add(p_cus, p_cus_init);
+    err_code = custom_gpio_char_add(p_cus, p_cus_init);
     if (err_code != NRF_SUCCESS) {
         return err_code;
     }
 
-    err_code = custom_led_init(p_cus);
+    err_code = custom_gpio_init(p_cus);
 
     return err_code;
 }
@@ -490,31 +490,27 @@ uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus) {
     return err_code;
 }
 
-uint32_t ble_cus_led4_update(ble_cus_t* p_cus, bool send_notification) {
+uint32_t ble_cus_led4_update(ble_cus_t* p_cus) {
     NRF_LOG_INFO("In ble_cus_led4_update.");
     if (p_cus == NULL) {
         return NRF_ERROR_NULL;
     }
 
     uint32_t err_code = NRF_SUCCESS;
-    ble_gatts_value_t gatts_value;
-    uint8_t led_buffer[LED_PAYLOAD_SIZE_BYTES] = {0};
+
+    uint8_t gpio_buffer[GPIO_PAYLOAD_SIZE_BYTES] = {0};
+    ble_gatts_value_t gatts_value = {
+        .len = GPIO_PAYLOAD_SIZE_BYTES, .offset = 0, .p_value = &(gpio_buffer[0])};
+    err_code = sd_ble_gatts_value_get(p_cus->conn_handle, p_cus->custom_value_handles.value_handle,
+                                      &gatts_value);
 
     nrf_gpio_pin_toggle(LED_4);
     bool led4_new_state = nrf_gpio_pin_out_read(LED_4) == LEDS_ACTIVE_STATE;
-    NRF_LOG_INFO("led4_new_state: %u (send_notification: %i)", led4_new_state, send_notification);
-    // currently only using the first index (only index)
-    led_buffer[0] = led4_new_state ? 1 : 0;
-
-    // Initialize value struct.
-    memset(&gatts_value, 0, sizeof(gatts_value));
-
-    gatts_value.len = LED_PAYLOAD_SIZE_BYTES * sizeof(uint8_t);
-    gatts_value.offset = 0;
-    gatts_value.p_value = led_buffer;
+    NRF_LOG_INFO("led4_new_state: %u", led4_new_state);
+    gpio_buffer[GPIO_PAYLOAD_INDEX_LED4] = led4_new_state ? 1 : 0;
 
     // Update database.
-    err_code = sd_ble_gatts_value_set(p_cus->conn_handle, p_cus->custom_led_handles.value_handle,
+    err_code = sd_ble_gatts_value_set(p_cus->conn_handle, p_cus->custom_gpio_handles.value_handle,
                                       &gatts_value);
     NRF_LOG_INFO("err_code: %u", err_code);
     if (err_code != NRF_SUCCESS) {
@@ -523,26 +519,23 @@ uint32_t ble_cus_led4_update(ble_cus_t* p_cus, bool send_notification) {
 
     // Send value if connected and notifying.
     if (p_cus->conn_handle != BLE_CONN_HANDLE_INVALID) {
-        if (send_notification)  // perhaps not necessary (yet?)
-        {
-            ble_gatts_hvx_params_t hvx_params;
+        ble_gatts_hvx_params_t hvx_params;
 
-            memset(&hvx_params, 0, sizeof(hvx_params));
+        memset(&hvx_params, 0, sizeof(hvx_params));
 
-            hvx_params.handle = p_cus->custom_led_handles.value_handle;
-            hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
-            hvx_params.offset = gatts_value.offset;
-            hvx_params.p_len = &gatts_value.len;
-            hvx_params.p_data = gatts_value.p_value;
+        hvx_params.handle = p_cus->custom_gpio_handles.value_handle;
+        hvx_params.type = BLE_GATT_HVX_NOTIFICATION;
+        hvx_params.offset = gatts_value.offset;
+        hvx_params.p_len = &gatts_value.len;
+        hvx_params.p_data = gatts_value.p_value;
 
-            err_code = sd_ble_gatts_hvx(p_cus->conn_handle, &hvx_params);
-            if (err_code != NRF_SUCCESS) {
-                NRF_LOG_INFO("sd_ble_gatts_hvx result: %x.", err_code);
-            }
-            // TODO: learn how to check if notifications are currently enabled by the application
-            // Currently we crash here if we try to write while we aren't registered for
-            // notifications
+        err_code = sd_ble_gatts_hvx(p_cus->conn_handle, &hvx_params);
+        if (err_code != NRF_SUCCESS) {
+            NRF_LOG_INFO("sd_ble_gatts_hvx result: %x.", err_code);
         }
+        // TODO: learn how to check if notifications are currently enabled by the application
+        // Currently we crash here if we try to write while we aren't registered for
+        // notifications
     } else {
         err_code = NRF_ERROR_INVALID_STATE;
         NRF_LOG_INFO("sd_ble_gatts_hvx result: NRF_ERROR_INVALID_STATE.");

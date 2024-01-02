@@ -15,7 +15,8 @@
 #else
 #define VALUE_PAYLOAD_SIZE_BYTES 3
 #endif
-#define LED_PAYLOAD_SIZE_BYTES 1
+#define GPIO_PAYLOAD_INDEX_LED4 0
+#define GPIO_PAYLOAD_SIZE_BYTES 1
 
 /**@brief   Macro for defining a ble_hrs instance.
  *
@@ -36,7 +37,7 @@
 
 #define CUSTOM_SERVICE_UUID 0x1400
 #define CUSTOM_VALUE_CHAR_UUID 0x1401  // read-only
-#define CUSTOM_LED_CHAR_UUID 0x1402    // read and write
+#define CUSTOM_GPIO_CHAR_UUID 0x1402    // read and write
 
 /**@brief Custom Service event type. */
 typedef enum {
@@ -77,9 +78,9 @@ struct ble_cus_s {
     ble_cus_evt_handler_t evt_handler;
     // Handle of Custom Service (as provided by the BLE stack)
     uint16_t service_handle;
-    // Handles related to the Custom Value characteristic
+    // Handles related to the Custom characteristics
     ble_gatts_char_handles_t custom_value_handles;
-    ble_gatts_char_handles_t custom_led_handles;
+    ble_gatts_char_handles_t custom_gpio_handles;
     // Handle of the current connection (as provided by the BLE stack, is BLE_CONN_HANDLE_INVALID if
     // not in a connection)
     uint16_t conn_handle;
@@ -133,6 +134,6 @@ uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus);
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
-uint32_t ble_cus_led4_update(ble_cus_t* p_cus, bool send_notification);
+uint32_t ble_cus_led4_update(ble_cus_t* p_cus);
 
 #endif  // BLE_CUS_H__
