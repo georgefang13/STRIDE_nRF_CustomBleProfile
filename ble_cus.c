@@ -279,7 +279,9 @@ static uint32_t custom_value_init(ble_cus_t* p_cus) {
     memcpy(value_buffer, HELLO_WORLD_STR, sizeof(value_buffer));
 #else
     for (int i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
-        value_buffer[i] = i;
+        // Init by VALUE_PAYLOAD_SIZE_BYTES less so that first call custom_value_update() call has
+        // the expected values
+        value_buffer[i] = (uint8_t)((i - VALUE_PAYLOAD_SIZE_BYTES) % 256);
     }
 #endif
     ble_gatts_value_t gatts_value;

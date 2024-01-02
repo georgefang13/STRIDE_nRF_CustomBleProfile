@@ -9,7 +9,8 @@
 // HELLO_WORLD will send a string in custom data, otherwise just generic data
 #define HELLO_WORLD 1
 #if (HELLO_WORLD)
-#define HELLO_WORLD_STR "Hello_World_"
+// Start string offset by 1 so that first custom_value_update() call sets to expected value
+#define HELLO_WORLD_STR "_Hello_World"
 #define VALUE_PAYLOAD_SIZE_BYTES sizeof(HELLO_WORLD_STR)
 #else
 #define VALUE_PAYLOAD_SIZE_BYTES 3
