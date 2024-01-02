@@ -269,7 +269,7 @@ static uint32_t custom_led_char_add(ble_cus_t* p_cus, const ble_cus_init_t* p_cu
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 static uint32_t custom_value_init(ble_cus_t* p_cus) {
-    NRF_LOG_INFO("In ble_cus_custom_value_init.");
+    NRF_LOG_INFO("In custom_value_init.");
     if (p_cus == NULL) {
         return NRF_ERROR_NULL;
     }
@@ -307,7 +307,7 @@ static uint32_t custom_value_init(ble_cus_t* p_cus) {
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 static uint32_t custom_led_init(ble_cus_t* p_cus) {
-    NRF_LOG_INFO("In ble_cus_custom_value_init.");
+    NRF_LOG_INFO("In custom_led_init.");
     if (p_cus == NULL) {
         return NRF_ERROR_NULL;
     }
@@ -398,7 +398,10 @@ static void custom_value_update(uint8_t* value_buffer) {
         memcpy(post_string, value_buffer, sizeof(pre_string));
         NRF_LOG_INFO(" pre_string  > %s", pre_string);
         NRF_LOG_INFO(" post_string > %s", post_string);
-#else
+#else  // #if (HELLO_WORLD)
+# define MAX_DEBUG_SIZE_BYTES 10
+#if (VALUE_PAYLOAD_SIZE_BYTES <= MAX_DEBUG_SIZE_BYTES)
+// Don't create large strings if the data is big
 #define STR_LEN (9 + VALUE_PAYLOAD_SIZE_BYTES * 4 + 1)
         static char indexes_string[STR_LEN];
         static char pre_string[STR_LEN];
@@ -409,20 +412,22 @@ static void custom_value_update(uint8_t* value_buffer) {
         char* indexes_ptr = indexes_string;
         char* pre_ptr = pre_string;
         char* post_ptr = post_string;
-        indexes_ptr += sprintf(indexes_ptr, "indexes: ");
-        pre_ptr += sprintf(pre_ptr, "    pre: ");
-        post_ptr += sprintf(post_ptr, "   post: ");
         for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
             indexes_ptr += sprintf(indexes_ptr, "%3u,", i);
             pre_ptr += sprintf(pre_ptr, "%3u,", value_buffer[i]);
             // The next line is the only real work here, all else is debug related
-            value_buffer[i] = value_buffer[i] + VALUE_PAYLOAD_SIZE_BYTES;
+            value_buffer[i] = (value_buffer[i] + VALUE_PAYLOAD_SIZE_BYTES) % 256;
             post_ptr += sprintf(post_ptr, "%3u,", value_buffer[i]);
         }
         NRF_LOG_INFO(" i    > %s", indexes_string);
         NRF_LOG_INFO(" pre  > %s", pre_string);
         NRF_LOG_INFO(" post > %s", post_string);
-#endif
+#else  // #if (VALUE_PAYLOAD_SIZE_BYTES < MAX_DEBUG_SIZE_BYTES)
+        for (uint8_t i = 0; i < VALUE_PAYLOAD_SIZE_BYTES; i++) {
+            value_buffer[i] = (value_buffer[i] + VALUE_PAYLOAD_SIZE_BYTES) % 256;
+        }
+#endif  // #if (VALUE_PAYLOAD_SIZE_BYTES < MAX_DEBUG_SIZE_BYTES)
+#endif  // #if (HELLO_WORLD)
     } else {
         NRF_LOG_INFO("NULL value_buffer");
     }
