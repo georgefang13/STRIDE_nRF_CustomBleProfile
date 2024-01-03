@@ -16,7 +16,12 @@
 #define VALUE_PAYLOAD_SIZE_BYTES 3
 #endif
 #define GPIO_PAYLOAD_INDEX_LED4 0
-#define GPIO_PAYLOAD_SIZE_BYTES 1
+#define GPIO_PAYLOAD_INDEX_GPIO11_OUTPUT 1
+#define GPIO_PAYLOAD_INDEX_GPIO12_INPUT 2
+#define GPIO_PAYLOAD_SIZE_BYTES 3
+
+#define GPIO_P0_11_DIG_OUT 11  // P0.11
+#define GPIO_P0_12_DIG_IN_PULLUP 12  // P0.12
 
 /**@brief   Macro for defining a ble_hrs instance.
  *
@@ -116,7 +121,7 @@ void ble_cus_on_ble_evt(ble_evt_t const* p_ble_evt, void* p_context);
  *
  * @note
  *
- * @param[in]   p_bas          Custom Service structure.
+ * @param[in]   p_cus          Custom Service structure.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
@@ -125,15 +130,25 @@ uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus);
 /**@brief Function for updating the LED data.
  *
  * @details The application calls this function when the LED value should be updated. If
- *          notification has been enabled, the LED characteristic is sent to the client.
+ *          notification has been enabled, the GPIO characteristic is sent to the client.
  *
  * @note
  *
- * @param[in]   p_bas          Custom Service structure.
- * @param[in]   LED data
+ * @param[in]   p_cus          Custom Service structure.
  *
  * @return      NRF_SUCCESS on success, otherwise an error code.
  */
 uint32_t ble_cus_led4_update(ble_cus_t* p_cus);
 
+/**@brief Function for updating the LED data.
+ *
+ * @details  If notification has been enabled, the GPIO characteristic is sent to the client.
+ *
+ * @note
+ *
+ * @param[in]   p_cus          Custom Service structure.
+ *
+ * @return      NRF_SUCCESS on success, otherwise an error code.
+ */
+uint32_t ble_cus_gpio_data_notify(ble_cus_t* p_cus);
 #endif  // BLE_CUS_H__

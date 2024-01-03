@@ -105,7 +105,8 @@
 #define NEXT_CONN_PARAMS_UPDATE_DELAY   APP_TIMER_TICKS(30000)                  /**< Time between each call to sd_ble_gap_conn_param_update after the first call (30 seconds). */
 #define MAX_CONN_PARAMS_UPDATE_COUNT    3                                       /**< Number of attempts before giving up the connection parameter negotiation. */
 
-#define NOTIFICATION_INTERVAL           APP_TIMER_TICKS(2000)
+#define CUS_DATA_NOTIFICATION_INTERVAL  APP_TIMER_TICKS(1000)
+#define GPIO_DATA_NOTIFICATION_INTERVAL APP_TIMER_TICKS(1000)
 
 #define SEC_PARAM_BOND                  1                                       /**< Perform bonding. */
 #define SEC_PARAM_MITM                  0                                       /**< Man In The Middle protection not required. */
@@ -118,15 +119,13 @@
 
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 
-#define GPIO_P0_11_DIG_OUT 11  // P0.11
-#define GPIO_P0_11_DIG_IN_PULLUP 12  // P0.12
-
 NRF_BLE_GATT_DEF(m_gatt);
 NRF_BLE_QWR_DEF(m_qwr);                                                         /**< GATT module instance. */
 BLE_CUS_DEF(m_cus);                                                             /**< Context for the Queued Write module.*/
 BLE_ADVERTISING_DEF(m_advertising);                                             /**< Advertising module instance. */
 
-APP_TIMER_DEF(m_notification_timer_id);
+APP_TIMER_DEF(m_cus_data_notification_timer_id);
+APP_TIMER_DEF(m_gpio_data_notification_timer_id);
 
 static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID;                        /**< Handle of the current connection. */
 
@@ -235,27 +234,34 @@ static void pm_evt_handler(pm_evt_t const* p_evt) {
     }
 }
 
-/**@brief Function for handling the notification timer timeout.
+/**@brief Function for handling the custom data notification timer timeout.
  *
- * @details This function will be called each time the notification timer expires.
+ * @details This function will be called each time the custom data notification timer expires.
  *
  * @param[in] p_context  Pointer used for passing some arbitrary information (context) from the
  *                       app_start_timer() call to the timeout handler.
  */
-static void notification_timeout_handler(void* p_context) {
+static void custom_data_notification_timeout_handler(void* p_context) {
     ble_cus_t* p_cus = (ble_cus_t*)p_context;
     ret_code_t err_code;
 
     err_code = ble_cus_custom_value_update(&m_cus);
     APP_ERROR_CHECK(err_code);
+}
 
-    // Intentionally commented out, if need state use nrf_gpio_pin_out_read() with
-    // nrf_gpio_pin_set() and/or nrf_gpio_pin_clear().
-    // uint32_t current_state = nrf_gpio_pin_out_read(GPIO_P0_11_DIG_OUT);
-    nrf_gpio_pin_toggle(GPIO_P0_11_DIG_OUT);
+/**@brief Function for handling the custom data notification timer timeout.
+ *
+ * @details This function will be called each time the custom data notification timer expires.
+ *
+ * @param[in] p_context  Pointer used for passing some arbitrary information (context) from the
+ *                       app_start_timer() call to the timeout handler.
+ */
+static void gpio_data_notification_timeout_handler(void* p_context) {
+    ble_cus_t* p_cus = (ble_cus_t*)p_context;
+    ret_code_t err_code;
 
-    uint32_t pin11 = nrf_gpio_pin_read(GPIO_P0_11_DIG_IN_PULLUP);
-    NRF_LOG_INFO("pin11 %i", pin11);
+    err_code = ble_cus_gpio_data_notify(&m_cus);
+    APP_ERROR_CHECK(err_code);
 }
 
 /**@brief Function for the Timer initialization.
@@ -268,8 +274,11 @@ static void timers_init(void) {
     APP_ERROR_CHECK(err_code);
 
     // Create timers.
-    err_code = app_timer_create(&m_notification_timer_id, APP_TIMER_MODE_REPEATED,
-                                notification_timeout_handler);
+    err_code = app_timer_create(&m_gpio_data_notification_timer_id, APP_TIMER_MODE_REPEATED,
+                                gpio_data_notification_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+    err_code = app_timer_create(&m_cus_data_notification_timer_id, APP_TIMER_MODE_REPEATED,
+                                custom_data_notification_timeout_handler);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -330,15 +339,18 @@ static void on_cus_evt(ble_cus_t* p_cus_service, ble_cus_evt_t* p_evt) {
 
     switch (p_evt->evt_type) {
         case BLE_CUS_EVT_NOTIFICATION_ENABLED:
-            // send an immediate notify via notification_timeout_handler()
-            notification_timeout_handler(&m_cus);
             err_code =
-                app_timer_start(m_notification_timer_id, NOTIFICATION_INTERVAL, p_cus_service);
+                app_timer_start(m_gpio_data_notification_timer_id, GPIO_DATA_NOTIFICATION_INTERVAL, p_cus_service);
+            APP_ERROR_CHECK(err_code);
+            err_code =
+                app_timer_start(m_cus_data_notification_timer_id, CUS_DATA_NOTIFICATION_INTERVAL, p_cus_service);
             APP_ERROR_CHECK(err_code);
             break;
 
         case BLE_CUS_EVT_NOTIFICATION_DISABLED:
-            err_code = app_timer_stop(m_notification_timer_id);
+            err_code = app_timer_stop(m_gpio_data_notification_timer_id);
+            APP_ERROR_CHECK(err_code);
+            err_code = app_timer_stop(m_cus_data_notification_timer_id);
             APP_ERROR_CHECK(err_code);
             break;
 
@@ -422,15 +434,6 @@ static void conn_params_init(void) {
 
     err_code = ble_conn_params_init(&cp_init);
     APP_ERROR_CHECK(err_code);
-}
-
-/**@brief Function for starting timers.
- */
-static void application_timers_start(void) {
-    /* YOUR_JOB (if needed): Start your timers. below is an example of how to start a timer.
-       ret_code_t err_code;
-       err_code = app_timer_start(m_app_timer_id, TIMER_INTERVAL, NULL);
-       APP_ERROR_CHECK(err_code); */
 }
 
 /**@brief Function for putting the chip into sleep mode.
@@ -704,7 +707,7 @@ static void buttons_leds_init(bool* p_erase_bonds) {
 
 static void gpios_init() {
     nrf_gpio_cfg_output(GPIO_P0_11_DIG_OUT);
-    nrf_gpio_cfg_input(GPIO_P0_11_DIG_IN_PULLUP, NRF_GPIO_PIN_PULLUP);
+    nrf_gpio_cfg_input(GPIO_P0_12_DIG_IN_PULLUP, NRF_GPIO_PIN_PULLUP);
 }
 
 
@@ -772,7 +775,6 @@ int main(void) {
     // Start execution.
     NRF_LOG_INFO("Template example started info.");
     NRF_LOG_DEBUG("Template example started debug.");
-    application_timers_start();
 
     advertising_start(erase_bonds);
 
