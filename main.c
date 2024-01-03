@@ -138,6 +138,8 @@ static ble_uuid_t m_adv_uuids[] =                                               
 // Formatting returns
 
 static void advertising_start(bool erase_bonds);
+static void timers_start(ble_cus_t* p_cus_service);
+static void timers_stop(void);
 
 /**@brief Callback function for asserts in the SoftDevice.
  *
@@ -246,7 +248,11 @@ static void custom_data_notification_timeout_handler(void* p_context) {
     ret_code_t err_code;
 
     err_code = ble_cus_custom_value_update(&m_cus);
-    APP_ERROR_CHECK(err_code);
+    if (err_code == NRF_ERROR_INVALID_STATE) {
+        timers_stop();
+    } else {
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 /**@brief Function for handling the custom data notification timer timeout.
@@ -261,7 +267,11 @@ static void gpio_data_notification_timeout_handler(void* p_context) {
     ret_code_t err_code;
 
     err_code = ble_cus_gpio_data_notify(&m_cus);
-    APP_ERROR_CHECK(err_code);
+    if (err_code == NRF_ERROR_INVALID_STATE) {
+        timers_stop();
+    } else {
+        APP_ERROR_CHECK(err_code);
+    }
 }
 
 /**@brief Function for the Timer initialization.
@@ -279,6 +289,23 @@ static void timers_init(void) {
     APP_ERROR_CHECK(err_code);
     err_code = app_timer_create(&m_cus_data_notification_timer_id, APP_TIMER_MODE_REPEATED,
                                 custom_data_notification_timeout_handler);
+    APP_ERROR_CHECK(err_code);
+}
+
+static void timers_start(ble_cus_t* p_cus_service) {
+    ret_code_t err_code =
+        app_timer_start(m_gpio_data_notification_timer_id, GPIO_DATA_NOTIFICATION_INTERVAL, p_cus_service);
+    APP_ERROR_CHECK(err_code);
+    err_code =
+        app_timer_start(m_cus_data_notification_timer_id, CUS_DATA_NOTIFICATION_INTERVAL, p_cus_service);
+    APP_ERROR_CHECK(err_code);
+}
+
+
+static void timers_stop(void) {
+    ret_code_t err_code = app_timer_stop(m_gpio_data_notification_timer_id);
+    APP_ERROR_CHECK(err_code);
+    err_code = app_timer_stop(m_cus_data_notification_timer_id);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -339,19 +366,11 @@ static void on_cus_evt(ble_cus_t* p_cus_service, ble_cus_evt_t* p_evt) {
 
     switch (p_evt->evt_type) {
         case BLE_CUS_EVT_NOTIFICATION_ENABLED:
-            err_code =
-                app_timer_start(m_gpio_data_notification_timer_id, GPIO_DATA_NOTIFICATION_INTERVAL, p_cus_service);
-            APP_ERROR_CHECK(err_code);
-            err_code =
-                app_timer_start(m_cus_data_notification_timer_id, CUS_DATA_NOTIFICATION_INTERVAL, p_cus_service);
-            APP_ERROR_CHECK(err_code);
+            timers_start(p_cus_service);
             break;
 
         case BLE_CUS_EVT_NOTIFICATION_DISABLED:
-            err_code = app_timer_stop(m_gpio_data_notification_timer_id);
-            APP_ERROR_CHECK(err_code);
-            err_code = app_timer_stop(m_cus_data_notification_timer_id);
-            APP_ERROR_CHECK(err_code);
+            timers_stop();
             break;
 
         case BLE_CUS_EVT_CONNECTED:

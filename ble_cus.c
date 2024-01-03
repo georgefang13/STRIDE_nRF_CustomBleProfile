@@ -488,8 +488,6 @@ uint32_t ble_cus_custom_value_update(ble_cus_t* p_cus) {
         if (err_code != NRF_SUCCESS) {
             NRF_LOG_INFO("sd_ble_gatts_hvx result: %x.", err_code);
         }
-        // TODO: learn how to check if notifications are currently enabled by the application
-        // Currently we crash here if we try to write while we aren't registered for notifications
     } else {
         err_code = NRF_ERROR_INVALID_STATE;
         NRF_LOG_INFO("sd_ble_gatts_hvx result: NRF_ERROR_INVALID_STATE.");
@@ -578,9 +576,6 @@ uint32_t ble_cus_gpio_data_notify(ble_cus_t* p_cus) {
         if (err_code != NRF_SUCCESS) {
             NRF_LOG_INFO("sd_ble_gatts_hvx result: %x.", err_code);
         }
-        // TODO: learn how to check if notifications are currently enabled by the application
-        // Currently we crash here if we try to write while we aren't registered for
-        // notifications
     } else {
         err_code = NRF_ERROR_INVALID_STATE;
         NRF_LOG_INFO("sd_ble_gatts_hvx result: NRF_ERROR_INVALID_STATE.");
