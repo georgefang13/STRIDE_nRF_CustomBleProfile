@@ -84,12 +84,12 @@ The nRF5 SDK you installed comes with several examples and templates to modify. 
 5. Open nRF Toolbox.
     * Note: Enable Bluetooth if prompted.
 6. Tap Heart Rate from the list of services
-    * **Android** screenshot below:
+    * **Android** screenshot below:  
     ![Toolbox view of Heart Rate service](images/nrftoolbox_hr.png)
 7. Tap Connect to begin a Bluetooth scan.
     * If you have trouble connecting, it's possible you have connected to this device or something similar in the past. To resolve this problem, forget the Bluetooth device in your phone's Bluetooth menu and try again.
 8. Select Nordic_HRM to pair to your development kit:
-    * **Android** screenshot below:
+    * **Android** screenshot below:  
     ![Scan view of Heart Rate service](images/nrftoolbox_hr_scan_result.png)
 9. Observe a simulated heart rate and battery charge percentage is displayed.
 
@@ -145,13 +145,8 @@ To enable printing debug data to the terminal via the NRF_LOG_INFO statements:
 2. Search for NRF_LOG_BACKEND_RTT_ENABLED and make sure its value is set to 1.
 3. Rebuild your project and begin debugging again - debug statements should work now.
 
-## Communicating with the Kit: RTT
-RTT is natively supported by SES, so it's a simple method of communicating with your development kit
-1. Open J-Link RTT Viewer (installed with the nRF Command Line Tools - search your computer for the **J-Link RTT Viewer**)
-2. Select the dev kit from the dropdown menu under "Specify Target Device"
-    * ![RTT Viewer](images/rtt_viewer.png)
-3. Select "Ok", observe the terminal changes:
-    * ![RTT Connected](images/rtt_viewer_connected.png)
+## Testing the Application
+TODO: DJE add screenshots for going through blinky in the app
 
 # Step 5: Your Turn
 Now that you've programmed the nRF52 DK with a basic application, try programming the provided application with generic BLE data.
