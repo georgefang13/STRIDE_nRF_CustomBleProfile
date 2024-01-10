@@ -79,7 +79,7 @@ The nRF5 SDK you installed comes with several examples and templates to modify. 
         * Click "Open Solution" in Segger Embedded Studio and select the "\PATH\TO\NRF52SDK\examples\ble_peripheral\ble_app_hrs\pca10040\s132\ses\ble_app_hrs_pca10040_s132.emProject" file
             * **Note**: we tried using the S332 SoftDevice and ran into problems, so we pivoted to the S132 SoftDevice
         * Select Build -> Build ble_app_hrs_pca10040_s132 (or press F7)
-        * Observe the output in the output pane below. If the build fails, check the **Compilation Issues** section of the **Troubleshooting** section below for some tips. Otherwise, Google :)
+        * Observe the output in the output pane below. If the build fails, check the  [**Compilation Issues**](#compilation-issues) section of the [**Troubleshooting**](#troubleshooting) section below for some tips. Otherwise, Google :)
         * Once you have built successfully, flash the built firmware to your board by selecting Target -> Download ble_app_hrs_pca10040_s132
 5. Open nRF Toolbox.
     * Note: Enable Bluetooth if prompted.
@@ -87,6 +87,7 @@ The nRF5 SDK you installed comes with several examples and templates to modify. 
     * **Android** screenshot below:
     ![Toolbox view of Heart Rate service](images/nrftoolbox_hr.png)
 7. Tap Connect to begin a Bluetooth scan.
+    * If you have trouble connecting, it's possible you have connected to this device or something similar in the past. To resolve this problem, forget the Bluetooth device in your phone's Bluetooth menu and try again.
 8. Select Nordic_HRM to pair to your development kit:
     * **Android** screenshot below:
     ![Scan view of Heart Rate service](images/nrftoolbox_hr_scan_result.png)
@@ -107,7 +108,7 @@ Applying system reset.
     * **Note**: we tried using the S332 SoftDevice and ran into problems, so we pivoted to the S132 SoftDevice
     ![Open solution](images/open_solution.png)
 2. Select Build -> Build ble_app_blinky_pca10040_s132 (or press F7)
-3. Observe the output in the output pane below. If the build fails, check the **Compilation Issues** section of the **Troubleshooting** section below for some tips. You may need to run Build -> **Rebuild** ble_app_blinky_pca10040_s132 (Alt + F7) to properly build after modifying the project.
+3. Observe the output in the output pane below. If the build fails, check the [**Compilation Issues**](#compilation-issues) section of the [**Troubleshooting**](#troubleshooting) section below for some tips. You may need to run Build -> **Rebuild** ble_app_blinky_pca10040_s132 (Alt + F7) to properly build after modifying the project.
 4. Once the build succeeds, switch the output pane to show "Tasks" instead of "Output" to observe the memory layout of the compiled application:
     * ![Memory layout](images/memory_layout_no_changes.png)
 
