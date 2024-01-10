@@ -132,12 +132,18 @@ We recommend using version 17.10a, so **you should be able to skip this step**, 
 6. Select Alt + F7 to rebuild after your changes: ensure your output has no warnings
 
 ## Programming the Firmware
-1. Select F5 (Debug -> Go) to program the application to your dev board (it should be plugged in), and then debugging will begin
+1. Select F5 (Debug -> Go) to program the application to your dev board (it should be plugged in), and then debugging will begin. You will have to select the Play button (or F5 again) to begin the code execution, though, since the debugger breaks just ahead of the main method each time.
     * ![Stackframe](images/blinky_debug_stackframe.png)
     * Notice a call stack frame appears - you can select the Pause icon to pause execution and the disassembled code appears on the left hand side
     * ![Disassembly](images/blinky_disassembly.png)
     * And the Play icon resumes execution
     * ![Resume](images/blinky_resume.png)
+
+## Enabling NRF_LOG_INFO Prints
+To enable printing debug data to the terminal via the NRF_LOG_INFO statements:
+1. Open sdk_config.h
+2. Search for NRF_LOG_BACKEND_RTT_ENABLED and make sure its value is set to 1.
+3. Rebuild your project and begin debugging again - debug statements should work now.
 
 ## Communicating with the Kit: RTT
 RTT is natively supported by SES, so it's a simple method of communicating with your development kit
