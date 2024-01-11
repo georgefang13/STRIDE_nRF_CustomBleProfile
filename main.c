@@ -654,8 +654,12 @@ static void bsp_event_handler(bsp_event_t event) {
             break;
 
         case BSP_EVENT_KEY_0:  // Button 1
-                               // This currently causes the dev-kit to crash...so let's avoid
-                               // pressing Button 1
+            // Press and release of Button 1 may cause the dev-kit to halt when debugging.
+            // To prevent this, you can comment out the call to sleep_mode_enter() in the
+            // BSP_EVENT_SLEEP case statement above. Refer to BTN_ID_SLEEP and BTN_ACTION_SLEEP
+            // in bsp_btn_ble.c which are used to put the application into sleep mode when
+            // Button 1 is released. Alternatively, you can remove this association to
+            // prevent the debugger from stopping when Button 1 is released.
             NRF_LOG_INFO("Button 1 pressed");
             break;
 
