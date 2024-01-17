@@ -10,8 +10,8 @@ The following hardware will be required for developing with the nRF52 DK:
 * Micro USB cable (for board power/connecting to computer)
 * [nRF52 DK (dev-kit)](https://www.nordicsemi.com/Products/Development-hardware/nRF52-DK/GetStarted?lang=en#infotabs)
     * This will be used as this server / peripheral device
-* [nRF52840 USB Dongle](https://www.nordicsemi.com/Products/Development-hardware/nRF52840-Dongle)
-    * This will be used as the client / watch app device in conjunction with the Connect IQ SDK
+* [[Optional] nRF52840 USB Dongle](https://www.nordicsemi.com/Products/Development-hardware/nRF52840-Dongle)
+    * Once you have proven out communication with the nRF52 DK, you may consider miniaturization via this dongle
 * Computer (Windows 10 / Windows 11 were used in our demo)
 * Smartphone (for Bluetooth scanning / testing purposes)
 
