@@ -1,0 +1,8 @@
+{
+    "port": "COM8",
+    "configuration": "LoopCore=1,EventsCore=1,USBMode=hwcdc,CDCOnBoot=cdc,MSCOnBoot=default,DFUOnBoot=default,UploadMode=default,PSRAM=enabled,PartitionScheme=default_8MB,CPUFreq=240,FlashMode=qio,UploadSpeed=921600,DebugLevel=none,EraseFlash=none",
+    "board": "esp32:esp32:tinys3",
+    "programmer": "esptool",
+    "sketch": "main\\main.ino",
+    "output": ".\\build"
+}
