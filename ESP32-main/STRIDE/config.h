@@ -18,10 +18,9 @@
 #define NUM_PADS 8
 #define MAX_PAD_SAMPLES 500
 #define IMU_SAMPLES 25
-#define BYTES_PER_VALUE 2  // Assume uint16_t for pressure, float16 possible for IMU
 
 #define PRESSURE_THRESHOLD 50  // Minimum pressure to start collecting data
-#define TRANSMIT_POINTS 5     // Number of evenly spaced points to transmit
+#define PACKET_SIZE        20      // Number of points to transmit
 
 // BLE values
 #if STRIDE_MODE == 1

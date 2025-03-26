@@ -9,7 +9,7 @@
 
  @authors: Luke Andresen
 
- @date: 3/7/2025
+ @date: 3/26/2025
 
  @brief: This file is the primary driver for the STRIDE platform, built on an ESP32-s3 
 ------------------------------------------------------------------------------*/
@@ -22,12 +22,12 @@ BLE2901 *descriptor_2901 = NULL;
 
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
-uint32_t value = 0;
 
 // FSR Data Storage
 uint16_t pad_data[NUM_PADS][MAX_PAD_SAMPLES]; // Store raw FSR data
-uint16_t selected_data[NUM_PADS * TRANSMIT_POINTS];    // Store downsampled data
+uint8_t data_packet[PACKET_SIZE];             // Store processed data
 uint8_t sample_index = 0;
+uint8_t max_value = 1;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -54,7 +54,6 @@ void setup() {
 
   // Set up BLE and begin advertisement
   BLE_init();
-
 }
 
 void loop() {
@@ -109,9 +108,10 @@ void collect_FSR(){
        pad_sample[6] > 50 || pad_sample[2] > 50){
 
       for(int i = 0; i < NUM_PADS; i++){
-        // Serial.print(i+1); Serial.print(": ");
-        // Serial.println(pad_sample[i]);
         pad_data[i][sample_index] = pad_sample[i];
+        if(pad_sample[i] > max_value){
+          max_value = pad_sample[i];
+        }
       }
 
       sample_index++;
@@ -127,32 +127,32 @@ void collect_FSR(){
   }
 }
 
-
 void process_and_transmit_data() {
-  // Calculate step size based on the total number of samples collected
-  int step_size = sample_index / TRANSMIT_POINTS;
-  for (int i = 0; i < TRANSMIT_POINTS; i++) {
-    int sample_index_for_point = i * step_size;
-    for (int j = 0; j < NUM_PADS; j++) {
-      // Select the sample based on the step size
-      selected_data[i*NUM_PADS+j] = pad_data[j][sample_index_for_point];
+  uint8_t data_indices[3] = {sample_index / 5, sample_index / 2, sample_index* 4 / 5};
+  for (int i = 0; i < 24; i++) {
+    uint8_t data_index = data_indices[i/3];
+    uint8_t pad_idx = i % 8;  
+
+    uint8_t scaled_value = map(pad_data[pad_idx][data_index], 0, max_value, 0, 15);
+
+    if (i % 2 == 0) {
+        data_packet[i / 2] = (scaled_value << 4);  // Store high nibble
+    } else {
+        data_packet[i / 2] |= scaled_value;  // Store low nibble
     }
   }
-  sample_index = 0;
-  
-  // Split the selected data into 8 parts (each part will have 160/8 = 20 bytes)
-  uint8_t chunk_size = sizeof(selected_data) / 4;
-  for (int chunk = 0; chunk < 4; chunk++) {
-    // Define the chunk data
-    uint8_t chunk_data[chunk_size];
-    memcpy(chunk_data, selected_data + chunk * chunk_size, chunk_size);
 
-    // Transmit the chunk of data
-    pCharacteristic->setValue(chunk_data, chunk_size);
+    // Store the max value, scaled to fit in a single byte (0-255)
+    data_packet[12] = map(max_value, 0, 4095, 0, 255);
+
+    // Transmit the collected data
+    pCharacteristic->setValue((uint8_t *)data_packet, 13);
     pCharacteristic->notify();
-    Serial.println("Data chunk transmitted");
-  }
-  Serial.println("All data chunks transmitted");
+    Serial.println("Data transmitted");
+
+    // Reset sample index for next collection
+    sample_index = 0;
+    max_value = 1;
 }
 
 
