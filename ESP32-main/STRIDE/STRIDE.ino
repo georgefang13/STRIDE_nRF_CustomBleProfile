@@ -26,8 +26,8 @@ bool oldDeviceConnected = false;
 // FSR Data Storage
 uint16_t pad_data[NUM_PADS][MAX_PAD_SAMPLES]; // Store raw FSR data
 uint8_t data_packet[PACKET_SIZE];             // Store processed data
-uint8_t sample_index = 0;
-uint8_t max_value = 1;
+uint16_t sample_index = 0;
+uint16_t max_value = 1;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -70,9 +70,9 @@ void loop() {
        analogRead(PAD8_PIN) > 50){
     
       collect_FSR();
-      if(sample_index > TRANSMIT_POINTS){
-        process_and_transmit_data();
-      }
+      Serial.print("Max Value: ");
+      Serial.println(max_value);
+      process_and_transmit_data();
     }
   }
   // disconnecting
@@ -105,7 +105,7 @@ void collect_FSR(){
     if(pad_sample[0] > 50 || pad_sample[1] > 50 || \
        pad_sample[2] > 50 || pad_sample[3] > 50 || \
        pad_sample[4] > 50 || pad_sample[5] > 50 || \
-       pad_sample[6] > 50 || pad_sample[2] > 50){
+       pad_sample[6] > 50 || pad_sample[7] > 50){
 
       for(int i = 0; i < NUM_PADS; i++){
         pad_data[i][sample_index] = pad_sample[i];
@@ -130,10 +130,15 @@ void collect_FSR(){
 void process_and_transmit_data() {
   uint8_t data_indices[3] = {sample_index / 5, sample_index / 2, sample_index* 4 / 5};
   for (int i = 0; i < 24; i++) {
-    uint8_t data_index = data_indices[i/3];
+    uint8_t data_index = data_indices[i/8];
     uint8_t pad_idx = i % 8;  
 
     uint8_t scaled_value = map(pad_data[pad_idx][data_index], 0, max_value, 0, 15);
+
+    Serial.print(pad_idx+1);
+    Serial.print(": ");
+    Serial.println(scaled_value);
+
 
     if (i % 2 == 0) {
         data_packet[i / 2] = (scaled_value << 4);  // Store high nibble
