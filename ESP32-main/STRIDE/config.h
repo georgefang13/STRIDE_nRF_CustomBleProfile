@@ -45,9 +45,16 @@
 #define PAD7_PIN 5
 #define PAD8_PIN 16
 
+#define SDA      41  // SDA for I2C Bus 1 (STEMMA QT default)
+#define SCL      40  // SCL for I2C Bus 1 (STEMMA QT default)
+
 /*************LIBRARIES*************/
 #include <BLEDevice.h>
 #include <BLEServer.h>
 #include <BLEUtils.h>
 #include <BLE2902.h>
 #include <BLE2901.h>
+#include <Wire.h>
+#include <Adafruit_BNO08x.h>
+
+

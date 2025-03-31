@@ -16,6 +16,9 @@
 
 #include <config.h>
 
+Adafruit_BNO08x bno08x(-1);
+sh2_SensorValue_t sensorValue;
+
 BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
 BLE2901 *descriptor_2901 = NULL;
@@ -41,7 +44,21 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 void setup() {
   Serial.begin(115200);
-  
+  Serial.println("Welcome to STRIDE");
+
+  Wire1.begin(SDA, SCL, 400000); 
+  Serial.println("I2C Initialized"); 
+
+  delay(100);
+
+  if (!bno08x.begin_I2C(0x4A, &Wire1)) {
+      Serial.println("Failed to initialize BNO08x!");
+      while (1);
+  }
+  Serial.println("BNO085 initialized!");
+
+  set_reports();
+
   // Set pins
   pinMode(PAD1_PIN, INPUT);
   pinMode(PAD2_PIN, INPUT);
@@ -201,4 +218,16 @@ void BLE_init(){
   pAdvertising->setMinPreferred(0x00);  // Lower = faster connections
   BLEDevice::startAdvertising();
   Serial.println("Waiting a client connection to notify...");
+}
+
+// Enable necessary sensor reports
+void set_reports(void) {
+    Serial.println("Setting desired reports...");
+    if (!bno08x.enableReport(SH2_LINEAR_ACCELERATION)) {
+        Serial.println("Could not enable linear acceleration");
+    }
+    if (!bno08x.enableReport(SH2_STEP_COUNTER)) {
+      Serial.println("Could not enable step counter");
+    }
+    Serial.println("Reports set");
 }
