@@ -65,7 +65,7 @@ void loop() {
        analogRead(PAD3_PIN) > 50 || \
        analogRead(PAD4_PIN) > 50 || \
        analogRead(PAD5_PIN) > 50 || \
-       analogRead(PAD6_PIN) > 50 || \
+      /*  analogRead(PAD6_PIN) > 50 || \ */
        analogRead(PAD7_PIN) > 50 || \
        analogRead(PAD8_PIN) > 50){
     
@@ -98,7 +98,8 @@ void collect_FSR(){
     pad_sample[2] = analogRead(PAD3_PIN);
     pad_sample[3] = analogRead(PAD4_PIN);
     pad_sample[4] = analogRead(PAD5_PIN);
-    pad_sample[5] = analogRead(PAD6_PIN);
+    // pad_sample[5] = analogRead(PAD6_PIN);
+    pad_sample[5] = 0;
     pad_sample[6] = analogRead(PAD7_PIN);
     pad_sample[7] = analogRead(PAD8_PIN);
 

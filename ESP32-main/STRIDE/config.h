@@ -36,14 +36,14 @@
 #endif
 
 /*************PINS*************/
-#define PAD1_PIN 6
-#define PAD2_PIN 5
-#define PAD3_PIN 17
-#define PAD4_PIN 9
-#define PAD5_PIN 8
-#define PAD6_PIN 7
-#define PAD7_PIN 16
-#define PAD8_PIN 18
+#define PAD1_PIN 7
+#define PAD2_PIN 9
+#define PAD3_PIN 6
+#define PAD4_PIN 8
+#define PAD5_PIN 17
+#define PAD6_PIN 18
+#define PAD7_PIN 5
+#define PAD8_PIN 16
 
 /*************LIBRARIES*************/
 #include <BLEDevice.h>
