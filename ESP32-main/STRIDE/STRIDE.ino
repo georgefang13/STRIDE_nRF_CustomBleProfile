@@ -23,6 +23,7 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
 BLE2901 *descriptor_2901 = NULL;
 
+// Data Transmission bools
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
@@ -31,6 +32,11 @@ uint16_t pad_data[NUM_PADS][MAX_PAD_SAMPLES]; // Store raw FSR data
 uint8_t data_packet[PACKET_SIZE];             // Store processed data
 uint16_t sample_index = 0;
 uint16_t max_value = 1;
+
+// IMU Data Storage
+uint16_t acc_data[NUM_IMU_AXES][MAX_IMU_SAMPLES];   // Store raw IMU data (lin acc | rotation)
+uint16_t imu_packet[IMU_PACKET_SIZE];
+unsigned long lastTime = 0;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -77,6 +83,7 @@ void loop() {
   
   // notify changed value
   if (deviceConnected) {
+    // FSR readings take place if any pad reads a value over the threshold
     if(analogRead(PAD1_PIN) > 50 || \
        analogRead(PAD2_PIN) > 50 || \
        analogRead(PAD3_PIN) > 50 || \
@@ -84,13 +91,17 @@ void loop() {
        analogRead(PAD5_PIN) > 50 || \
       /*  analogRead(PAD6_PIN) > 50 || \ */
        analogRead(PAD7_PIN) > 50 || \
-       analogRead(PAD8_PIN) > 50){
-    
+       analogRead(PAD8_PIN) > 50) {
+        
       collect_FSR();
       Serial.print("Max Value: ");
       Serial.println(max_value);
+
+      // after this, we want to process_and_transmit_data with prev IMU and FSR data
       process_and_transmit_data();
     }
+    // if we're not stepping, collect IMU data sequentially
+    collect_IMU_datapoint();
   }
   // disconnecting
   if (!deviceConnected && oldDeviceConnected) {
@@ -145,6 +156,76 @@ void collect_FSR(){
   }
 }
 
+void collect_IMU_datapoint() {
+    // collect event datapoint and add it to acc_data[][];
+    unsigned long currentTime = millis();
+    float deltaT = (currentTime - lastTime) / 1000.0; 
+    lastTime = currentTime;
+
+    float ax = 0;
+    float ay = 0;
+    float az = 0;
+    float qw = 0;
+    float qx = 0;
+    float qy = 0;
+    float qz = 0;
+    float vel_forward;
+    float vel_upward;
+    float vel_side;
+    float pos_forward;
+    float pos_upward;
+    float pos_side;
+
+    if (bno08x.getSensorEvent(&sensorValue)) {
+      // get linear acceleration values
+      if (sensorValue.sensorId == SH2_LINEAR_ACCELERATION) {
+        ax = sensorValue.un.linearAcceleration.x;
+        ay = sensorValue.un.linearAcceleration.y;
+        az = sensorValue.un.linearAcceleration.z;
+      }
+
+      // get rotation values
+      if (sensorValue.sensorId == SH2_ROTATION_VECTOR) {
+        qw = sensorValue.un.rotationVector.real;
+        qx = sensorValue.un.rotationVector.i;
+        qy = sensorValue.un.rotationVector.j;
+        qz = sensorValue.un.rotationVector.k;
+      }
+
+      // calculate rotation around z-axis (this is axis into ankle; main axis of rotation)
+      float theta_z = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+
+      // get components of acceleration to calculate forward and upward acc
+      // TODO: the sign of these will need to change based on default orientation of IMU
+      float a_forward = ax * cos(theta_z) + ay * sin(theta_z);
+      float a_upward = -ax * sin(theta_z) + ay * cos(theta_z);
+      float a_side = az;
+
+      // integrate acc --> vel
+      vel_forward += a_forward * deltaT;
+      vel_upward += a_upward * deltaT;
+      vel_side += a_side * deltaT;
+
+      // integrate vel --> pos
+      pos_forward += vel_forward * deltaT;
+      pos_upward += vel_upward * deltaT;
+      pos_side += vel_side * deltaT;
+
+      // print final acc
+      Serial.print("Upward Accel: "); Serial.print(a_upward);
+      Serial.print(" | Forward Accel: "); Serial.print(a_forward);
+      Serial.print(" | Sideways Accel: "); Serial.println(a_side);
+
+      // print final position
+      Serial.print("Upward Pos: "); Serial.print(pos_forward);
+      Serial.print(" | Forward Pos: "); Serial.print(pos_upward);
+      Serial.print(" | Sideways Pos: "); Serial.println(pos_side);
+    }
+  // delay by sample frequency
+  delay(IMU_SAMPLE_FREQ);
+}
+
+//TODO: processing and packaging for IMU data
 void process_and_transmit_data() {
   uint8_t data_indices[3] = {sample_index / 5, sample_index / 2, sample_index* 4 / 5};
   for (int i = 0; i < 24; i++) {
@@ -165,17 +246,19 @@ void process_and_transmit_data() {
     }
   }
 
-    // Store the max value, scaled to fit in a single byte (0-255)
-    data_packet[12] = map(max_value, 0, 4095, 0, 255);
+  // Store the max value, scaled to fit in a single byte (0-255)
+  data_packet[12] = map(max_value, 0, 4095, 0, 255);
 
-    // Transmit the collected data
-    pCharacteristic->setValue((uint8_t *)data_packet, 13);
-    pCharacteristic->notify();
-    Serial.println("Data transmitted");
+  // Store IMU in data packet from 13 to 19
 
-    // Reset sample index for next collection
-    sample_index = 0;
-    max_value = 1;
+  // Transmit the collected data
+  pCharacteristic->setValue((uint8_t *)data_packet, 13);
+  pCharacteristic->notify();
+  Serial.println("Data transmitted");
+
+  // Reset sample index for next collection
+  sample_index = 0;
+  max_value = 1;
 }
 
 
@@ -228,6 +311,9 @@ void set_reports(void) {
     }
     if (!bno08x.enableReport(SH2_STEP_COUNTER)) {
       Serial.println("Could not enable step counter");
+    }
+    if (!bno08x.enableReport(SH2_ROTATION_VECTOR)) {
+      Serial.println("Could not enable rotation vector");
     }
     Serial.println("Reports set");
 }

@@ -17,10 +17,14 @@
 // Define buffer sizes based on estimated data needs
 #define NUM_PADS 8
 #define MAX_PAD_SAMPLES 500
-#define IMU_SAMPLES 25
+#define NUM_IMU_AXES 6
+#define MAX_IMU_SAMPLES 500
 
 #define PRESSURE_THRESHOLD 50  // Minimum pressure to start collecting data
 #define PACKET_SIZE        20      // Number of points to transmit
+
+#define IMU_PACKET_SIZE     7      // Number of points available for IMU
+#define IMU_SAMPLE_FREQ   100      // Sample frequency
 
 // BLE values
 #if STRIDE_MODE == 1
