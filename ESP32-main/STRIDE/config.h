@@ -16,15 +16,15 @@
 
 // Define buffer sizes based on estimated data needs
 #define NUM_PADS 8
-#define MAX_PAD_SAMPLES 500
-#define NUM_IMU_AXES 6
-#define MAX_IMU_SAMPLES 500
+#define MAX_PAD_SAMPLES 200
+#define NUM_IMU_AXES 3             // Only Up-Forward-Side
+#define MAX_IMU_SAMPLES 200
 
-#define PRESSURE_THRESHOLD 50  // Minimum pressure to start collecting data
+#define PRESSURE_THRESHOLD 50      // Minimum pressure to start collecting data
 #define PACKET_SIZE        20      // Number of points to transmit
 
 #define IMU_PACKET_SIZE     7      // Number of points available for IMU
-#define IMU_SAMPLE_FREQ   100      // Sample frequency
+#define IMU_SAMPLE_FREQ    10      // Sample frequency
 
 // BLE values
 #if STRIDE_MODE == 1
@@ -60,5 +60,3 @@
 #include <BLE2901.h>
 #include <Wire.h>
 #include <Adafruit_BNO08x.h>
-
-
