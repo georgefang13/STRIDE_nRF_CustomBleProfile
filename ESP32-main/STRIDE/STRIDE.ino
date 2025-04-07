@@ -91,13 +91,14 @@ void loop() {
        analogRead(PAD3_PIN) > 50 || \
        analogRead(PAD4_PIN) > 50 || \
        analogRead(PAD5_PIN) > 50 || \
-      /*  analogRead(PAD6_PIN) > 50 || \ */
+       analogRead(PAD6_PIN) > 50 || \
        analogRead(PAD7_PIN) > 50 || \
        analogRead(PAD8_PIN) > 50) {
         
       collect_FSR();
-      Serial.print("Max Value: ");
-      Serial.println(max_value);
+
+      // Serial.print("Max Value: ");
+      // Serial.println(max_value);
 
       // after this, we want to process_and_transmit_data with prev IMU and FSR data
       process_and_transmit_data();
@@ -130,7 +131,7 @@ void collect_FSR(){
     pad_sample[2] = analogRead(PAD3_PIN);
     pad_sample[3] = analogRead(PAD4_PIN);
     pad_sample[4] = analogRead(PAD5_PIN);
-    // pad_sample[5] = analogRead(PAD6_PIN);
+    pad_sample[5] = analogRead(PAD6_PIN);
     pad_sample[5] = 0;
     pad_sample[6] = analogRead(PAD7_PIN);
     pad_sample[7] = analogRead(PAD8_PIN);
@@ -230,9 +231,9 @@ void process_and_transmit_data() {
 
     uint8_t scaled_value = map(pad_data[pad_idx][data_index], 0, max_value, 0, 15);
 
-    Serial.print(pad_idx+1);
-    Serial.print(": ");
-    Serial.println(scaled_value);
+    // Serial.print(pad_idx+1);
+    // Serial.print(": ");
+    // Serial.println(scaled_value);
 
 
     if (i % 2 == 0) {
@@ -270,10 +271,10 @@ void process_and_transmit_data() {
       float a_side = filtered_data[i][2];
 
       if (fabs(a_forward) > thresh || fabs(a_upward) > thresh || fabs(a_side) > thresh) {
-          Serial.printf("(Data point %d - Forward acc: %f | ", i, a_forward);
-          Serial.printf("Upward acc: %f | ", a_upward);
-          Serial.printf("Side acc: %f", a_side);
-          Serial.println();
+          // Serial.printf("(Data point %d - Forward acc: %f | ", i, a_forward);
+          // Serial.printf("Upward acc: %f | ", a_upward);
+          // Serial.printf("Side acc: %f", a_side);
+          // Serial.println();
 
           temp[pos_idx][0] = a_forward;
           temp[pos_idx][1] = a_upward;
@@ -295,7 +296,7 @@ void process_and_transmit_data() {
   // track max values
   int minX_idx = 0;
   int maxY_idx = 0;
-  int maxX_idx = 0;
+  int maxX_idx = imu_sample_index-1;
 
   for (int j = 0; j < pos_idx; j++) {
       int cur_index = temp_indices[j];
@@ -331,9 +332,6 @@ void process_and_transmit_data() {
       pos_data[j][2] = side_pos;
 
       // update max indices
-      if (forward_pos > pos_data[maxX_idx][0]) {
-        maxX_idx = j;
-      }
       if (forward_pos < pos_data[minX_idx][0]) {
         minX_idx = j;
       }
@@ -348,68 +346,69 @@ void process_and_transmit_data() {
   }
 
   // package [ {MIN_X, MAX_Y, 75th, MAX_X} | MAX ] into top 7 bytes
-  float minX_x = 0, maxY_x = 0, midstep_x = 0, maxX_x = 0;
-  float minX_y = 0, maxY_y = 0, midstep_y = 0;
+  // float minX_x = 0, maxY_x = 0, midstep_x = 0, maxX_x = 0;
+  // float minX_y = 0, maxY_y = 0, midstep_y = 0;
   int midstep_idx = (int) round(3 * pos_idx / 4);
 
   // calculating 3 point rolling average w/ out of bounds checks
-  if (minX_idx > 0 && minX_idx < pos_idx) {
-      minX_x = (pos_data[minX_idx][0] + pos_data[minX_idx - 1][0] + pos_data[minX_idx + 1][0]) / 3;
-      minX_y = (pos_data[minX_idx][1] + pos_data[minX_idx - 1][1] + pos_data[minX_idx + 1][1]) / 3;
-  }
-  else {
-      minX_x = pos_data[minX_idx][0];
-      minX_y = pos_data[minX_idx][1];
-  }
-  if (maxY_idx > 0 && maxY_idx < pos_idx) {
-      maxY_x = (pos_data[maxY_idx][0] + pos_data[maxY_idx - 1][0] + pos_data[maxY_idx + 1][0]) / 3;
-      maxY_y = (pos_data[maxY_idx][1] + pos_data[maxY_idx - 1][1] + pos_data[maxY_idx + 1][1]) / 3;
-  }
-  else {
-      maxY_x = pos_data[maxY_idx][0];
-      maxY_y = pos_data[maxY_idx][1];
-  }
-  if (midstep_idx > 0 && midstep_idx < pos_idx) {
-      midstep_x = (pos_data[midstep_idx][0] + pos_data[midstep_idx - 1][0] + pos_data[midstep_idx + 1][0]) / 3;
-      midstep_y = (pos_data[midstep_idx][1] + pos_data[midstep_idx - 1][1] + pos_data[midstep_idx + 1][1]) / 3;
-  }
-  else {
-      midstep_x = pos_data[midstep_idx][0];
-      midstep_y = pos_data[midstep_idx][1];
-  }
-  // implied y value of 0
-  if (maxX_idx > 0 && maxX_idx < pos_idx) {
-      maxX_x = (pos_data[maxX_idx][0] + pos_data[maxX_idx - 1][0] + pos_data[maxX_idx + 1][0]) / 3;
-  }
-  else {
-      maxX_x = pos_data[maxX_idx][0];
-  }
+  // if (minX_idx > 0 && minX_idx < pos_idx) {
+  //     minX_x = abs((pos_data[minX_idx][0] + pos_data[minX_idx - 1][0] + pos_data[minX_idx + 1][0]) / 3);
+  //     minX_y = (pos_data[minX_idx][1] + pos_data[minX_idx - 1][1] + pos_data[minX_idx + 1][1]) / 3;
+  // }
+  // else {
+  //     minX_x = abs(pos_data[minX_idx][0]);
+  //     minX_y = pos_data[minX_idx][1];
+  // }
+  // if (maxY_idx > 0 && maxY_idx < pos_idx) {
+  //     maxY_x = (pos_data[maxY_idx][0] + pos_data[maxY_idx - 1][0] + pos_data[maxY_idx + 1][0]) / 3;
+  //     maxY_y = (pos_data[maxY_idx][1] + pos_data[maxY_idx - 1][1] + pos_data[maxY_idx + 1][1]) / 3;
+  // }
+  // else {
+  //     maxY_x = pos_data[maxY_idx][0];
+  //     maxY_y = pos_data[maxY_idx][1];
+  // }
+  // if (midstep_idx > 0 && midstep_idx < pos_idx) {
+  //     midstep_x = (pos_data[midstep_idx][0] + pos_data[midstep_idx - 1][0] + pos_data[midstep_idx + 1][0]) / 3;
+  //     midstep_y = (pos_data[midstep_idx][1] + pos_data[midstep_idx - 1][1] + pos_data[midstep_idx + 1][1]) / 3;
+  // }
+  // else {
+  //     midstep_x = pos_data[midstep_idx][0];
+  //     midstep_y = pos_data[midstep_idx][1];
+  // }
+  // // implied y value of 0
+  // if (maxX_idx > 0 && maxX_idx < pos_idx) {
+  //     maxX_x = (pos_data[maxX_idx][0] + pos_data[maxX_idx - 1][0] + pos_data[maxX_idx + 1][0]) / 3;
+  // }
+  // else {
+  //     maxX_x = pos_data[maxX_idx][0];
+  // }
+
+  uint8_t minX_x = abs(pos_data[minX_idx][0]) * 100;
+  uint8_t minX_y = pos_data[minX_idx][1] * 100;
+  uint8_t maxY_x = pos_data[maxY_idx][0] * 100;
+  uint8_t maxY_y = pos_data[maxY_idx][1] * 100;
+  uint8_t midstep_x = pos_data[midstep_idx][0] * 100;
+  uint8_t midstep_y = pos_data[midstep_idx][1] * 100;
+  uint8_t maxX_x = pos_data[maxX_idx][0] * 100;
 
   // print out all the values
   Serial.print("Points in order: ");
-  Serial.printf("Min X: (%f, %f)", minX_x, minX_y); Serial.println("");
-  Serial.printf("Max Y: (%f, %f)", maxY_x, maxY_y); Serial.println("");
-  Serial.printf("Midstep: (%f, %f)", midstep_x, midstep_y); Serial.println("");
-  Serial.printf("Max X: (%f, 0.0)", maxX_x); Serial.println("");
+  Serial.printf("Min X: (%d, %d)", minX_x, minX_y); Serial.println("");
+  Serial.printf("Max Y: (%d, %d)", maxY_x, maxY_y); Serial.println("");
+  Serial.printf("Midstep: (%d, %d)", midstep_x, midstep_y); Serial.println("");
+  Serial.printf("Max X: (%d, 0.0)", maxX_x); Serial.println("");
 
-  uint8_t bin_minX_x = (uint8_t) minX_x * 100;
-  uint8_t bin_minX_y = (uint8_t) minX_y * 100;
-  uint8_t bin_maxY_x = (uint8_t) maxY_x * 100;
-  uint8_t bin_maxY_y = (uint8_t) maxY_y * 100;
-  uint8_t bin_midstep_x = (uint8_t) midstep_x * 100;
-  uint8_t bin_midstep_y = (uint8_t) midstep_y * 100;
-  uint8_t bin_maxX_x = maxX_x * 100;
+  data_packet[13] = minX_x;
+  data_packet[14] = minX_y;
+  data_packet[15] = maxY_x;
+  data_packet[16] = maxY_y;
+  data_packet[17] = midstep_x;
+  data_packet[18] = midstep_y;
+  data_packet[19] = maxX_x;
 
-  data_packet[13] = bin_minX_x;
-  data_packet[14] = bin_minX_y;
-  data_packet[15] = bin_maxY_x;
-  data_packet[16] = bin_maxY_y;
-  data_packet[17] = bin_midstep_x;
-  data_packet[18] = bin_midstep_y;
-  data_packet[19] = bin_maxX_x;
 
   // Transmit the collected data
-  pCharacteristic->setValue((uint8_t *)data_packet, 13);
+  pCharacteristic->setValue((uint8_t *)data_packet, PACKET_SIZE);
   pCharacteristic->notify();
   Serial.println("Data transmitted");
 
