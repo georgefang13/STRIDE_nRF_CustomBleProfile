@@ -38,6 +38,8 @@ float acc_data[MAX_IMU_SAMPLES][NUM_IMU_AXES];   // Store unfiltered IMU data
 float pos_data[MAX_IMU_SAMPLES][3];              // 3 axis integrated acc data
 uint16_t imu_sample_index = 0;
 unsigned long lastTime = 0;
+float forward_offset = 0;
+float upward_offset = 0;
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -188,13 +190,17 @@ void collect_IMU_datapoint() {
       }
 
       // calculate rotation around z-axis (this is axis into ankle; main axis of rotation)
-      float theta_z = atan2(2 * (qw * qz + qx * qy), 1 - 2 * (qy * qy + qz * qz));
+      // float theta_z = atan2(2.0 * (qw * qz + qx * qy), 1.0 - 2.0 * (qy * qy + qz * qz));
 
       // get components of acceleration to calculate forward and upward acc
-      // TODO: the sign of these will need to change based on default orientation of IMU
-      float a_forward = ax * cos(theta_z) + -1 * ay * sin(theta_z);
-      float a_upward = -1 * ay * cos(theta_z) + -1 * ax * sin(theta_z);
+      // default orientation: x is forward (+ rot), y is upward (+ rot), z is into ankle from exterior (axis of rotation)
+      // float a_forward = -1 * ax * cos(theta_z) + ay * sin(theta_z);
+      // float a_upward = -1 * ax * sin(theta_z) + -1 * ay * cos(theta_z);
       float a_side = az;
+
+      float theta_x = atan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy));
+      float a_forward = -1 * ax * cos(theta_x) + ay * sin(theta_x);
+      float a_upward = -1 * (ax * sin(theta_x) + ay * cos(theta_x));
 
       // store acc value
       acc_data[imu_sample_index][0] = a_forward;
@@ -261,7 +267,7 @@ void process_and_transmit_data() {
 
   // 2. Threshold filtered acceleration
   int pos_idx = 0;
-  float thresh = 0.1;
+  float thresh = 0.05;
   float temp[imu_sample_index + 1][3];
   int temp_indices[imu_sample_index + 1];
 
@@ -296,7 +302,7 @@ void process_and_transmit_data() {
   // track max values
   int minX_idx = 0;
   int maxY_idx = 0;
-  int maxX_idx = imu_sample_index-1;
+  int maxX_idx = pos_idx-1;
 
   for (int j = 0; j < pos_idx; j++) {
       int cur_index = temp_indices[j];
@@ -383,16 +389,22 @@ void process_and_transmit_data() {
   //     maxX_x = pos_data[maxX_idx][0];
   // }
 
-  uint8_t minX_x = abs(pos_data[minX_idx][0]) * 100;
-  uint8_t minX_y = pos_data[minX_idx][1] * 100;
-  uint8_t maxY_x = pos_data[maxY_idx][0] * 100;
-  uint8_t maxY_y = pos_data[maxY_idx][1] * 100;
-  uint8_t midstep_x = pos_data[midstep_idx][0] * 100;
-  uint8_t midstep_y = pos_data[midstep_idx][1] * 100;
-  uint8_t maxX_x = pos_data[maxX_idx][0] * 100;
+  int8_t minX_x = pos_data[minX_idx][0] * 50;
+  int8_t minX_y = pos_data[minX_idx][1] * 50;
+  int8_t maxY_x = pos_data[maxY_idx][0] * 50;
+  int8_t maxY_y = pos_data[maxY_idx][1] * 50;
+  int8_t midstep_x = pos_data[midstep_idx][0] * 50;
+  int8_t midstep_y = pos_data[midstep_idx][1] * 50;
+  int8_t maxX_x = pos_data[maxX_idx][0] * 50;
+
+  forward_offset = pos_data[0][0];
+  upward_offset = pos_data[0][1];
+
+  Serial.printf("Forward Offset: %f | Upward Offset : %f", forward_offset, upward_offset);
+  Serial.println("");
 
   // print out all the values
-  Serial.print("Points in order: ");
+  Serial.println("POINTS TO TRANSMIT:");
   Serial.printf("Min X: (%d, %d)", minX_x, minX_y); Serial.println("");
   Serial.printf("Max Y: (%d, %d)", maxY_x, maxY_y); Serial.println("");
   Serial.printf("Midstep: (%d, %d)", midstep_x, midstep_y); Serial.println("");
