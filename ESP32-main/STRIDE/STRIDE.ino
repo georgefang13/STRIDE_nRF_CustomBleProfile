@@ -7,9 +7,9 @@
 ███████║   ██║   ██║  ██║██║██████╔╝███████╗    
 ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝   
 
- @authors: Luke Andresen
+ @authors: Luke Andresen, Gavin Kitch
 
- @date: 3/26/2025
+ @date: 4/21/2025
 
  @brief: This file is the primary driver for the STRIDE platform, built on an ESP32-s3 
 ------------------------------------------------------------------------------*/
@@ -23,14 +23,25 @@ BLEServer *pServer = NULL;
 BLECharacteristic *pCharacteristic = NULL;
 BLE2901 *descriptor_2901 = NULL;
 
+// Data Transmission bools
 bool deviceConnected = false;
 bool oldDeviceConnected = false;
 
 // FSR Data Storage
 uint16_t pad_data[NUM_PADS][MAX_PAD_SAMPLES]; // Store raw FSR data
 uint8_t data_packet[PACKET_SIZE];             // Store processed data
-uint16_t sample_index = 0;
+uint16_t fsr_sample_index = 0;
 uint16_t max_value = 1;
+
+// IMU Data Storage
+float acc_data[MAX_IMU_SAMPLES][NUM_IMU_AXES];   // Store unfiltered IMU data
+float pos_data[MAX_IMU_SAMPLES][3];              // 3 axis integrated acc data
+uint16_t imu_sample_index = 0;
+unsigned long lastTime = 0;
+// to minimize local alloc, defined as globals
+float temp[MAX_IMU_SAMPLES][3];
+int temp_indices[MAX_IMU_SAMPLES];
+float filtered_data[MAX_IMU_SAMPLES][3];
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -44,8 +55,10 @@ class MyServerCallbacks : public BLEServerCallbacks {
 
 void setup() {
   Serial.begin(115200);
+  delay(100);
   Serial.println("Welcome to STRIDE");
 
+  // initialize I2C on specificied SDA/SCL ports for IMU
   Wire1.begin(SDA, SCL, 400000); 
   Serial.println("I2C Initialized"); 
 
@@ -74,22 +87,26 @@ void setup() {
 }
 
 void loop() {
-  
   // notify changed value
   if (deviceConnected) {
+    // FSR readings take place if any pad reads a value over the threshold
     if(analogRead(PAD1_PIN) > 50 || \
        analogRead(PAD2_PIN) > 50 || \
        analogRead(PAD3_PIN) > 50 || \
        analogRead(PAD4_PIN) > 50 || \
        analogRead(PAD5_PIN) > 50 || \
-      /*  analogRead(PAD6_PIN) > 50 || \ */
+       analogRead(PAD6_PIN) > 50 || \
        analogRead(PAD7_PIN) > 50 || \
-       analogRead(PAD8_PIN) > 50){
-    
+       analogRead(PAD8_PIN) > 50) {
+        
       collect_FSR();
-      Serial.print("Max Value: ");
-      Serial.println(max_value);
+
+      // after this, we want to process_and_transmit_data with prev IMU and current FSR data
       process_and_transmit_data();
+    }
+    // if we're not stepping, collect IMU data sequentially for next transmission
+    if (imu_sample_index < MAX_IMU_SAMPLES) {
+      collect_IMU_datapoint();
     }
   }
   // disconnecting
@@ -115,7 +132,7 @@ void collect_FSR(){
     pad_sample[2] = analogRead(PAD3_PIN);
     pad_sample[3] = analogRead(PAD4_PIN);
     pad_sample[4] = analogRead(PAD5_PIN);
-    // pad_sample[5] = analogRead(PAD6_PIN);
+    pad_sample[5] = analogRead(PAD6_PIN);
     pad_sample[5] = 0;
     pad_sample[6] = analogRead(PAD7_PIN);
     pad_sample[7] = analogRead(PAD8_PIN);
@@ -126,15 +143,15 @@ void collect_FSR(){
        pad_sample[6] > 50 || pad_sample[7] > 50){
 
       for(int i = 0; i < NUM_PADS; i++){
-        pad_data[i][sample_index] = pad_sample[i];
+        pad_data[i][fsr_sample_index] = pad_sample[i];
         if(pad_sample[i] > max_value){
           max_value = pad_sample[i];
         }
       }
 
-      sample_index++;
+      fsr_sample_index++;
 
-      if(sample_index >= MAX_PAD_SAMPLES){
+      if(fsr_sample_index >= MAX_PAD_SAMPLES){
         collecting = false;
       }
     }
@@ -145,18 +162,68 @@ void collect_FSR(){
   }
 }
 
+void collect_IMU_datapoint() {
+    float ax = 0;
+    float ay = 0;
+    float az = 0;
+    float qw = 0;
+    float qx = 0;
+    float qy = 0;
+    float qz = 0;
+
+    if (bno08x.getSensorEvent(&sensorValue)) {
+      // get linear acceleration values
+      if (sensorValue.sensorId == SH2_LINEAR_ACCELERATION) {
+        ax = sensorValue.un.linearAcceleration.x;
+        ay = sensorValue.un.linearAcceleration.y;
+        az = sensorValue.un.linearAcceleration.z;
+      }
+
+      // get rotation values
+      if (sensorValue.sensorId == SH2_ROTATION_VECTOR) {
+        qw = sensorValue.un.rotationVector.real;
+        qx = sensorValue.un.rotationVector.i;
+        qy = sensorValue.un.rotationVector.j;
+        qz = sensorValue.un.rotationVector.k;
+      }
+
+      // calculate rotation about x (global) via quaternion math for adj accels
+      float theta_x = atan2(2.0 * (qw * qx + qy * qz), 1.0 - 2.0 * (qx * qx + qy * qy));
+      float a_forward = -1 * ax * cos(theta_x) + ay * sin(theta_x);
+      float a_upward = -1 * (ax * sin(theta_x) + ay * cos(theta_x));
+      float a_side = az;
+
+      // store acc values
+      acc_data[imu_sample_index][0] = a_forward;
+      acc_data[imu_sample_index][1] = a_upward;
+      acc_data[imu_sample_index][2] = a_side;
+      imu_sample_index++;
+    }
+  // delay by sample 
+  delay(IMU_SAMPLE_DELAY);
+}
+
+// FILTERS FOR IMU DATA SMOOTHING
+// Low-pass filter helper (exponential smoothing)
+float alpha = 0.6; // tune between 0 (no change) and 1 (very fast)
+float lowPassFilter(float current, float previous) {
+    return alpha * current + (1 - alpha) * previous;
+}
+
+float highPassFilter(float current_vel, float prev_accel, float current_accel, float alpha) {
+    // alpha should be between 0 (no filtering) and 1 (very aggressive filtering)
+    return alpha * (current_vel + current_accel - prev_accel);
+}
+
 void process_and_transmit_data() {
-  uint8_t data_indices[3] = {sample_index / 5, sample_index / 2, sample_index* 4 / 5};
+  Serial.println("Processing and Transmitting data...");
+  delay(100);
+  uint8_t data_indices[3] = {fsr_sample_index / 5, fsr_sample_index / 2, fsr_sample_index* 4 / 5};
   for (int i = 0; i < 24; i++) {
     uint8_t data_index = data_indices[i/8];
     uint8_t pad_idx = i % 8;  
 
     uint8_t scaled_value = map(pad_data[pad_idx][data_index], 0, max_value, 0, 15);
-
-    Serial.print(pad_idx+1);
-    Serial.print(": ");
-    Serial.println(scaled_value);
-
 
     if (i % 2 == 0) {
         data_packet[i / 2] = (scaled_value << 4);  // Store high nibble
@@ -165,17 +232,156 @@ void process_and_transmit_data() {
     }
   }
 
-    // Store the max value, scaled to fit in a single byte (0-255)
-    data_packet[12] = map(max_value, 0, 4095, 0, 255);
+  // Store the max value, scaled to fit in a single byte (0-255)
+  data_packet[12] = map(max_value, 0, 4095, 0, 255);
 
-    // Transmit the collected data
-    pCharacteristic->setValue((uint8_t *)data_packet, 13);
-    pCharacteristic->notify();
-    Serial.println("Data transmitted");
+  // IMU PROCESSING
+  // apply low-pass filter to raw acc data
+  filtered_data[0][0] = acc_data[0][0];
+  filtered_data[0][1] = acc_data[0][1];
+  filtered_data[0][2] = acc_data[0][2];
+  for (int i = 1; i < imu_sample_index; i++) {
+      filtered_data[i][0] = lowPassFilter(acc_data[i][0], filtered_data[i - 1][0]);
+      filtered_data[i][1] = lowPassFilter(acc_data[i][1], filtered_data[i - 1][1]);
+      filtered_data[i][2] = lowPassFilter(acc_data[i][2], filtered_data[i - 1][2]);
+  }
 
-    // Reset sample index for next collection
-    sample_index = 0;
-    max_value = 1;
+  // threshold filtered acceleration, storing only relevant values
+  int pos_idx = 0;
+  float thresh = 0.05;
+
+  for (int i = 0; i < imu_sample_index && pos_idx < MAX_IMU_SAMPLES; i++) {
+      float a_forward = filtered_data[i][0];
+      float a_upward = filtered_data[i][1];
+      float a_side = filtered_data[i][2];
+
+      if (fabs(a_forward) > thresh || fabs(a_upward) > thresh || fabs(a_side) > thresh) {
+          temp[pos_idx][0] = a_forward;
+          temp[pos_idx][1] = a_upward;
+          temp[pos_idx][2] = a_side;
+          temp_indices[pos_idx] = i;
+          pos_idx++;
+      }
+  }
+
+  // double integration to retreive relative position from acceleration
+  float forward_pos = 0, upward_pos = 0, side_pos = 0;
+  float forward_vel = 0, upward_vel = 0, side_vel = 0;
+  float prev_ax = 0, prev_ay = 0, prev_az = 0;
+  float dt = 0;
+  int prev_index = 0;
+
+  float alpha = 0.9; // adjust between 0.8–0.98 based on filtering strength
+
+  // track max values
+  int minX_idx = 0;
+  int maxY_idx = 0;
+  int maxX_idx = pos_idx-1;
+
+  // log if we exceed sample size——losing some data
+  if (pos_idx >= MAX_IMU_SAMPLES) {
+      Serial.println("⚠️ pos_idx reached MAX_IMU_SAMPLES — data may be truncated.");
+  }
+  
+  for (int j = 0; j < pos_idx && j < MAX_IMU_SAMPLES; j++) {
+      if (pos_idx <= 0 || pos_idx > MAX_IMU_SAMPLES) {
+        Serial.println("Invalid pos_idx, aborting transmission.");
+        return;
+      }
+
+      int cur_index = temp_indices[j];
+      dt = (cur_index - prev_index) * IMU_SAMPLE_DELAY * 0.001; // convert ms to s
+      prev_index = cur_index;
+
+      float a_forward = temp[j][0];
+      float a_upward = temp[j][1];
+      float a_side = temp[j][2];
+
+      // integrate acceleration -> velocity
+      forward_vel += a_forward * dt;
+      upward_vel += a_upward * dt;
+      side_vel += a_side * dt;
+
+      // apply high-pass filter to remove drift in velocity
+      forward_vel = highPassFilter(forward_vel, prev_ax, a_forward, alpha);
+      upward_vel = highPassFilter(upward_vel, prev_ay, a_upward, alpha);
+      side_vel = highPassFilter(side_vel, prev_az, a_side, alpha);
+
+      // save current accel for next high-pass filter round
+      prev_ax = a_forward;
+      prev_ay = a_upward;
+      prev_az = a_side;
+
+      // integrate velocity -> position
+      forward_pos += forward_vel * dt;
+      upward_pos += upward_vel * dt;
+      side_pos += side_vel * dt;
+
+      pos_data[j][0] = forward_pos;
+      pos_data[j][1] = upward_pos;
+      pos_data[j][2] = side_pos;
+
+      // update max indices if relevant
+      if (forward_pos < pos_data[minX_idx][0]) {
+        minX_idx = j;
+      }
+      if (forward_pos > pos_data[maxX_idx][0]) {
+        maxX_idx = j;
+      }
+      if (upward_pos > pos_data[maxY_idx][1]) {
+        maxY_idx = j;
+      }
+  }
+
+  // midstep index is 80th pctile of collected points
+  int midstep_idx = min((int) round(4 * pos_idx / 5), MAX_IMU_SAMPLES - 1);  // --- FIXED
+
+  // adjust, assign values to transmit, capped by MAX
+  int8_t minX_x = min(pos_data[minX_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t minX_y = min(pos_data[minX_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxY_x = min(pos_data[maxY_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxY_y = min(pos_data[maxY_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t midstep_x = min(pos_data[midstep_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t midstep_y = min(pos_data[midstep_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxX_x = min(pos_data[maxX_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+
+  // print out all the values
+  Serial.println("POINTS TO TRANSMIT:");
+  Serial.printf("Min X: (%d, %d)", minX_x, minX_y); Serial.println("");
+  Serial.printf("Max Y: (%d, %d)", maxY_x, maxY_y); Serial.println("");
+  Serial.printf("Midstep: (%d, %d)", midstep_x, midstep_y); Serial.println("");
+  Serial.printf("Max X: (%d, 0.0)", maxX_x); Serial.println("");
+
+  // validate data
+  //  minXx < maxYx < midXx < maxXx
+  //  minXy < maxYy and midy < maxYy
+  //  no negative values (besides minX_x, maxY_x)
+  if ((minX_x <= maxY_x && maxY_x <= midstep_x && midstep_x <= maxX_x) && 
+      (minX_y <= maxY_y && midstep_y <= maxY_y) &&
+      (minX_y >= 0 && midstep_x > 0 && midstep_y > 0)) {
+        data_packet[13] = minX_x;
+        data_packet[14] = minX_y;
+        data_packet[15] = maxY_x;
+        data_packet[16] = maxY_y;
+        data_packet[17] = midstep_x;
+        data_packet[18] = midstep_y;
+        data_packet[19] = maxX_x;
+  }
+  else {
+      // pad with 0s - erroneous data isn't stored
+      memset(&data_packet[13], 0, 7);
+      Serial.println("Invalid data, 0's sent for IMU values");
+  }
+
+  // Transmit the collected data
+  pCharacteristic->setValue((uint8_t *)data_packet, PACKET_SIZE);
+  pCharacteristic->notify();
+  Serial.println("Data transmitted");
+
+  // Reset sample index for next collection
+  fsr_sample_index = 0;
+  max_value = 1;
+  imu_sample_index = 0;
 }
 
 
@@ -228,6 +434,9 @@ void set_reports(void) {
     }
     if (!bno08x.enableReport(SH2_STEP_COUNTER)) {
       Serial.println("Could not enable step counter");
+    }
+    if (!bno08x.enableReport(SH2_ROTATION_VECTOR)) {
+      Serial.println("Could not enable rotation vector");
     }
     Serial.println("Reports set");
 }
