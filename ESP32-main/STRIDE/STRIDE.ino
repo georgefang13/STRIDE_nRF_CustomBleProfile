@@ -7,7 +7,7 @@
 ███████║   ██║   ██║  ██║██║██████╔╝███████╗    
 ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚═╝╚═════╝ ╚══════╝   
 
- @authors: Luke Andresen
+ @authors: Luke Andresen, Gavin Kitch
 
  @date: 3/26/2025
 
@@ -40,6 +40,10 @@ uint16_t imu_sample_index = 0;
 unsigned long lastTime = 0;
 float forward_offset = 0;
 float upward_offset = 0;
+// temp storage as global variable—avoid local ovf
+float temp[MAX_IMU_SAMPLES][3];
+int temp_indices[MAX_IMU_SAMPLES];
+float filtered_data[MAX_IMU_SAMPLES][3];
 
 class MyServerCallbacks : public BLEServerCallbacks {
   void onConnect(BLEServer *pServer) {
@@ -84,7 +88,6 @@ void setup() {
 }
 
 void loop() {
-  
   // notify changed value
   if (deviceConnected) {
     // FSR readings take place if any pad reads a value over the threshold
@@ -237,11 +240,6 @@ void process_and_transmit_data() {
 
     uint8_t scaled_value = map(pad_data[pad_idx][data_index], 0, max_value, 0, 15);
 
-    // Serial.print(pad_idx+1);
-    // Serial.print(": ");
-    // Serial.println(scaled_value);
-
-
     if (i % 2 == 0) {
         data_packet[i / 2] = (scaled_value << 4);  // Store high nibble
     } else {
@@ -253,8 +251,6 @@ void process_and_transmit_data() {
   data_packet[12] = map(max_value, 0, 4095, 0, 255);
 
   // IMU PROCESSING
-  float filtered_data[imu_sample_index][3];
-
   // 1. Apply low-pass filter to raw data
   filtered_data[0][0] = acc_data[0][0];
   filtered_data[0][1] = acc_data[0][1];
@@ -268,20 +264,13 @@ void process_and_transmit_data() {
   // 2. Threshold filtered acceleration
   int pos_idx = 0;
   float thresh = 0.05;
-  float temp[imu_sample_index + 1][3];
-  int temp_indices[imu_sample_index + 1];
 
-  for (int i = 0; i < imu_sample_index; i++) {
+  for (int i = 0; i < imu_sample_index && pos_idx < MAX_IMU_SAMPLES; i++) {
       float a_forward = filtered_data[i][0];
       float a_upward = filtered_data[i][1];
       float a_side = filtered_data[i][2];
 
       if (fabs(a_forward) > thresh || fabs(a_upward) > thresh || fabs(a_side) > thresh) {
-          // Serial.printf("(Data point %d - Forward acc: %f | ", i, a_forward);
-          // Serial.printf("Upward acc: %f | ", a_upward);
-          // Serial.printf("Side acc: %f", a_side);
-          // Serial.println();
-
           temp[pos_idx][0] = a_forward;
           temp[pos_idx][1] = a_upward;
           temp[pos_idx][2] = a_side;
@@ -304,7 +293,16 @@ void process_and_transmit_data() {
   int maxY_idx = 0;
   int maxX_idx = pos_idx-1;
 
-  for (int j = 0; j < pos_idx; j++) {
+  if (pos_idx >= MAX_IMU_SAMPLES) {
+      Serial.println("⚠️ pos_idx reached MAX_IMU_SAMPLES — data may be truncated.");  // --- FIXED
+  }
+  
+  for (int j = 0; j < pos_idx && j < MAX_IMU_SAMPLES; j++) {
+      if (pos_idx <= 0 || pos_idx > MAX_IMU_SAMPLES) {
+        Serial.println("Invalid pos_idx, aborting transmission.");
+        return;
+      }
+
       int cur_index = temp_indices[j];
       dt = (cur_index - prev_index) * IMU_SAMPLE_FREQ * 0.001; // convert ms to s
       prev_index = cur_index;
@@ -333,6 +331,7 @@ void process_and_transmit_data() {
       upward_pos += upward_vel * dt;
       side_pos += side_vel * dt;
 
+      // TODO: POSSIBLY NEED CLAMPING OF J HERE
       pos_data[j][0] = forward_pos;
       pos_data[j][1] = upward_pos;
       pos_data[j][2] = side_pos;
@@ -341,20 +340,27 @@ void process_and_transmit_data() {
       if (forward_pos < pos_data[minX_idx][0]) {
         minX_idx = j;
       }
+      if (forward_pos > pos_data[maxX_idx][0]) {
+        maxX_idx = j;
+      }
       if (upward_pos > pos_data[maxY_idx][1]) {
         maxY_idx = j;
       }
 
-      Serial.printf("(Data point %d - Forward: %f", j, forward_pos);
-      Serial.printf(" | Upward: %f", upward_pos);
-      Serial.printf(" | Side: %f", side_pos);
-      Serial.println();
+      // Serial.printf("(Data point %d - Forward: %f", j, forward_pos);
+      // Serial.printf(" | Upward: %f", upward_pos);
+      // Serial.printf(" | Side: %f", side_pos);
+      // Serial.println();
   }
 
   // package [ {MIN_X, MAX_Y, 75th, MAX_X} | MAX ] into top 7 bytes
   // float minX_x = 0, maxY_x = 0, midstep_x = 0, maxX_x = 0;
   // float minX_y = 0, maxY_y = 0, midstep_y = 0;
-  int midstep_idx = (int) round(3 * pos_idx / 4);
+  
+  // TODO: verify this index
+  // int midstep_idx = (int) round(3 * pos_idx / 4);
+  int midstep_idx = min((int) round(4 * pos_idx / 5), MAX_IMU_SAMPLES - 1);  // --- FIXED
+
 
   // calculating 3 point rolling average w/ out of bounds checks
   // if (minX_idx > 0 && minX_idx < pos_idx) {
@@ -389,19 +395,18 @@ void process_and_transmit_data() {
   //     maxX_x = pos_data[maxX_idx][0];
   // }
 
-  int8_t minX_x = pos_data[minX_idx][0] * 50;
-  int8_t minX_y = pos_data[minX_idx][1] * 50;
-  int8_t maxY_x = pos_data[maxY_idx][0] * 50;
-  int8_t maxY_y = pos_data[maxY_idx][1] * 50;
-  int8_t midstep_x = pos_data[midstep_idx][0] * 50;
-  int8_t midstep_y = pos_data[midstep_idx][1] * 50;
-  int8_t maxX_x = pos_data[maxX_idx][0] * 50;
+  int8_t minX_x = min(pos_data[minX_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t minX_y = min(pos_data[minX_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxY_x = min(pos_data[maxY_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxY_y = min(pos_data[maxY_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t midstep_x = min(pos_data[midstep_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t midstep_y = min(pos_data[midstep_idx][1] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
+  int8_t maxX_x = min(pos_data[maxX_idx][0] * IMU_SCALE + IMU_ADJ, MAX_IMU_VALUE);
 
-  forward_offset = pos_data[0][0];
-  upward_offset = pos_data[0][1];
-
-  Serial.printf("Forward Offset: %f | Upward Offset : %f", forward_offset, upward_offset);
-  Serial.println("");
+  // forward_offset = pos_data[0][0];
+  // upward_offset = pos_data[0][1];
+  // Serial.printf("Forward Offset: %f | Upward Offset : %f", forward_offset, upward_offset);
+  // Serial.println("");
 
   // print out all the values
   Serial.println("POINTS TO TRANSMIT:");
@@ -410,13 +415,28 @@ void process_and_transmit_data() {
   Serial.printf("Midstep: (%d, %d)", midstep_x, midstep_y); Serial.println("");
   Serial.printf("Max X: (%d, 0.0)", maxX_x); Serial.println("");
 
-  data_packet[13] = minX_x;
-  data_packet[14] = minX_y;
-  data_packet[15] = maxY_x;
-  data_packet[16] = maxY_y;
-  data_packet[17] = midstep_x;
-  data_packet[18] = midstep_y;
-  data_packet[19] = maxX_x;
+  // validate data
+  //  minXx < maxYx < midXx < maxXx
+  //  minXy < maxYy and midy < maxYy
+  //  no negative values (besides minX_x, maxY_x) - omitted are redundancies
+  if ((minX_x <= maxY_x && maxY_x <= midstep_x && midstep_x <= maxX_x) && 
+      (minX_y <= maxY_y && midstep_y <= maxY_y) &&
+      (minX_y >= 0 && midstep_x > 0 && midstep_y > 0)) {
+        data_packet[13] = minX_x;
+        data_packet[14] = minX_y;
+        data_packet[15] = maxY_x;
+        data_packet[16] = maxY_y;
+        data_packet[17] = midstep_x;
+        data_packet[18] = midstep_y;
+        data_packet[19] = maxX_x;
+  }
+  else {
+      // pad with 0s so we know to not save this imu data
+      memset(&data_packet[13], 0, 7);
+  }
+
+  // print out arr
+  for (int i = 13; i < 20; i++) Serial.print(String(data_packet[i], DEC) + " ");
 
 
   // Transmit the collected data

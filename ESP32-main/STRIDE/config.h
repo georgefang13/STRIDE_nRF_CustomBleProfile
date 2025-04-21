@@ -27,6 +27,8 @@
 #define IMU_SAMPLE_FREQ     10      // Sample frequency
 
 #define IMU_ADJ             10
+#define IMU_SCALE           50
+#define MAX_IMU_VALUE    50.0f
 
 // BLE values
 #if STRIDE_MODE == 1
