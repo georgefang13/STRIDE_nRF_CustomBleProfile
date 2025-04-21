@@ -24,7 +24,7 @@
 #define PACKET_SIZE         20      // Number of points to transmit
 
 #define IMU_PACKET_SIZE      7      // Number of points available for IMU
-#define IMU_SAMPLE_FREQ     10      // Sample frequency
+#define IMU_SAMPLE_DELAY     10     // 1/delay = Sample frequency
 
 #define IMU_ADJ             10
 #define IMU_SCALE           50
